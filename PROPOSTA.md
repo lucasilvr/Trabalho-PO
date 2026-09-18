@@ -6,6 +6,7 @@
 * **João Vicente Piller Menezes** (GitHub: `@joaopiller`)
 * **Isabella Vieira da Motta** (GitHub: `@isabellamott4`)
 * **Ana Laura Neuhaus Vega** (GitHub: `@ananeuhausv`)
+* **Karine Vitoria Marinho de Moraes** (GitHub: `@kvmoraes`)
 
 ## 2. Domínio Escolhido
 O domínio consiste em um Sistema de Gestão de Biblioteca responsável por orquestrar o catálogo de livros, as regras de empréstimo, filas de reserva, categorização de leitores, penalidades e multas por atraso. 
@@ -37,3 +38,8 @@ O sistema é composto por 5 agregados e 10 entidades de negócio distribuídos d
 * **Responsável:** Ana Laura Neuhaus Vega
 * **Entidades:** Multa (Raiz de Agregado) e Pagamento.
 * **Invariante de Domínio:** Uma Multa só altera seu status para "Quitada" se o valor do Pagamento processado for exatamente igual ou superior à taxa calculada automaticamente pelos dias de atraso.
+
+### Agregado 6: Manutenção e Restauro
+* **Responsável:** Karine Vitoria Marinho de Moraes
+* **Entidades:** OrdemServico (Raiz de Agregado) e LaudoAvaliacao.
+* **Invariante de Domínio:** Uma OrdemServico de restauro só pode ser iniciada se o LaudoAvaliacao indicar que o dano é "reparável" e o exemplar não estiver atualmente "emprestado" a um leitor.

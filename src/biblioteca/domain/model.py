@@ -13,10 +13,13 @@ class ItemEmprestado:
         self.id_exemplar = id_exemplar
         self.data_emprestimo = data_emprestimo
         self.data_prevista_devolucao = data_prevista_devolucao
-        self.data_devolucao = None
+        self.data_devolucao: date | None = None
 
     def esta_atrasado(self, data_referencia: date) -> bool:
         return (
             self.data_devolucao is None
             and data_referencia > self.data_prevista_devolucao
         )
+
+    def registrar_devolucao(self, data_devolucao: date) -> None:
+        self.data_devolucao = data_devolucao

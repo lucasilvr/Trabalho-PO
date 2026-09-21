@@ -1,0 +1,4 @@
+[
+  "tests/unit/test_acervo.py::test_deve_inativar_livro_quando_todos_exemplares_disponiveis",
+  "tests/unit/test_acervo.py::test_nao_deve_inativar_livro_emprestado"
+]

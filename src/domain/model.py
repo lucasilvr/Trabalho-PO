@@ -5,7 +5,7 @@ from typing import List
 class Exemplar:
     id_exemplar: str
     status: str = "disponivel"
-    
+
 class Livro:
     def __init__(self, isbn: str, titulo: str, autor: str):
         self.isbn = isbn
@@ -16,3 +16,9 @@ class Livro:
 
     def adicionar_exemplar(self, exemplar: Exemplar):
         self.exemplares.append(exemplar)
+
+    def inativar(self):
+        for exemplar in self.exemplares:
+            if exemplar.status == "emprestado":
+                raise Exception(f"O livro '{self.titulo}' não pode ser inativado pois possui alguns livros emprestados.")
+        self.ativo = False

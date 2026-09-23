@@ -26,3 +26,22 @@ class Reserva:
 
     def expirar(self) -> None:
         self.status = "Expirada"
+        
+class FilaEspera:
+    def __init__(self, id_livro: str):
+        self.id_livro = id_livro
+        self.reservas: list[Reserva] = []
+
+    def adicionar_reserva(self, reserva: Reserva) -> None:
+        self.reservas.append(reserva)
+
+    def exemplar_devolvido(self, data_hora: datetime) -> None:
+        pendentes = [r for r in self.reservas if r.status == "Pendente"]
+        if pendentes:
+            pendentes[0].disponibilizar(data_hora)
+
+    def atualizar_fila(self, data_hora_atual: datetime) -> None:
+        for reserva in self.reservas:
+            if reserva.esta_expirada(data_hora_atual):
+                reserva.expirar()
+                self.exemplar_devolvido(data_hora_atual)

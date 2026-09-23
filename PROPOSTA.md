@@ -9,10 +9,10 @@
 * **Karine Vitoria Marinho de Moraes** (GitHub: `@kvmoraes`)
 
 ## 2. Domínio Escolhido
-O domínio consiste em um Sistema de Gestão de Biblioteca responsável por orquestrar o catálogo de livros, as regras de empréstimo, filas de reserva, categorização de leitores, penalidades e multas por atraso. 
+O domínio consiste em um Sistema de Gestão de Biblioteca,  responsável por gerenciar o catálogo de livros, as regras de empréstimo, filas de reserva, categorização de leitores, penalidades e multas por atraso e o acompanhamento da manutenção e conservação dos exemplares danificados.
 
 ## 3. Agregados, Entidades e Divisão de Responsabilidades
-O sistema é composto por 5 agregados e 10 entidades de negócio distribuídos da seguinte forma:
+O sistema é composto por 6 agregados e 12 entidades de negócio distribuídos da seguinte forma:
 
 ### Agregado 1: Acervo (Catálogo)
 * **Responsável:** Lucas Dias Silveira
@@ -39,7 +39,7 @@ O sistema é composto por 5 agregados e 10 entidades de negócio distribuídos d
 * **Entidades:** Multa (Raiz de Agregado) e Pagamento.
 * **Invariante de Domínio:** Uma Multa só altera seu status para "Quitada" se o valor do Pagamento processado for exatamente igual ou superior à taxa calculada automaticamente pelos dias de atraso.
 
-### Agregado 6: Manutenção e Restauro
+### Agregado 6: Manutenção e Conservação do Acervo
 * **Responsável:** Karine Vitoria Marinho de Moraes
 * **Entidades:** OrdemServico (Raiz de Agregado) e LaudoAvaliacao.
-* **Invariante de Domínio:** Uma OrdemServico de restauro só pode ser iniciada se o LaudoAvaliacao indicar que o dano é "reparável" e o exemplar não estiver atualmente "emprestado" a um leitor.
+* **Invariante de Domínio:** Uma OrdemServico de restauração só pode ser iniciada para um exemplar que esteja disponível para manutenção e cujo LaudoAvaliacao indique que o dano é reparável. Um exemplar que esteja "emprestado" não pode ser encaminhado para manutenção.

@@ -1,5 +1,5 @@
 from sqlalchemy import Table, MetaData, Column, Integer, String, Boolean, Date
-from sqlalchemy.orm import registry
+from sqlalchemy.orm import registry, composite  # <-- composite importado aqui
 from biblioteca.domain import model
 
 mapper_registry = registry()
@@ -23,7 +23,7 @@ def start_mappers():
         model.Leitor,
         leitores_table,
         properties={
-            "categoria": mapper_registry.composite(
+            "categoria": composite(
                 model.CategoriaLeitor, 
                 leitores_table.c.categoria_nome, 
                 leitores_table.c.limite_emprestimos

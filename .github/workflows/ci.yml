@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - feat/conservacao-karine
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout do codigo
+      uses: actions/checkout@v4
+
+    - name: Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    
+    - name: Instalar dependências
+      run: pip install -r requirements.txt
+
+    - name: Executar teste de domínio
+      run: pytest tests/unit
+
+    - name: Executar teste de integração
+      run: pytest tests/integration
+
+    - name: Executar teste estrutural
+      run: pytest tests/e2e

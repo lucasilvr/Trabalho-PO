@@ -9,10 +9,10 @@
 * **Karine Vitoria Marinho de Moraes** (GitHub: `@kvmoraes`)
 
 ## 2. Domínio Escolhido
-O domínio consiste em um Sistema de Gestão de Biblioteca responsável por orquestrar o catálogo de livros, as regras de empréstimo, filas de reserva, categorização de leitores, penalidades e multas por atraso. 
+O domínio consiste em um Sistema de Gestão de Biblioteca,  responsável por gerenciar o catálogo de livros, as regras de empréstimo, filas de reserva, categorização de leitores, penalidades e multas por atraso e o acompanhamento da manutenção e conservação dos exemplares danificados.
 
 ## 3. Agregados, Entidades e Divisão de Responsabilidades
-O sistema é composto por 5 agregados e 10 entidades de negócio distribuídos da seguinte forma:
+O sistema é composto por 6 agregados e 12 entidades de negócio distribuídos da seguinte forma:
 
 ### Agregado 1: Acervo (Catálogo)
 * **Responsável:** Lucas Dias Silveira
@@ -39,7 +39,16 @@ O sistema é composto por 5 agregados e 10 entidades de negócio distribuídos d
 * **Entidades:** Multa (Raiz de Agregado) e Pagamento.
 * **Invariante de Domínio:** Uma Multa só altera seu status para "Quitada" se o valor do Pagamento processado for exatamente igual ou superior à taxa calculada automaticamente pelos dias de atraso.
 
-### Agregado 6: Manutenção e Restauro
+# Informações adicionais
+
+### Agregado 1: Acervo (Livro e Exemplar)
+* **Responsável:** Lucas Dias Silveira
+**Decisões Arquiteturais e de Design:**
+* **Modelagem de Domínio:** Escolhi estruturar `Livro` como a Raiz de Agregado e `Exemplar` como entidade interna subordinada. Isso garante que a regra de negócio central (a inativação do livro) valide todos os status dos exemplares em um único ponto de consistência.
+* **ORM Imperativo (Clássico):** A separação estrutural das tabelas no SQLAlchemy (em `orm.py`) permitiu manter as classes do domínio completamente puras, sem herdar dependências de infraestrutura, o que agilizou a execução dos testes unitários.
+* **Injeção de Dependência e Repository Pattern:** O uso da interface `AbstractRepository` na camada de serviço facilitou a criação e injeção do `FakeRepository`. Isso desacoplou as regras de negócio do banco de dados e permitiu validar a persistência em memória de forma isolada e performática.
+
+### Agregado 6: Manutenção e Conservação do Acervo
 * **Responsável:** Karine Vitoria Marinho de Moraes
 * **Entidades:** OrdemServico (Raiz de Agregado) e LaudoAvaliacao.
-* **Invariante de Domínio:** Uma OrdemServico de restauro só pode ser iniciada se o LaudoAvaliacao indicar que o dano é "reparável" e o exemplar não estiver atualmente "emprestado" a um leitor.
+* **Invariante de Domínio:** Uma OrdemServico de restauração só pode ser iniciada para um exemplar que esteja disponível para manutenção e cujo LaudoAvaliacao indique que o dano é reparável. Um exemplar que esteja "emprestado" não pode ser encaminhado para manutenção.

@@ -68,7 +68,7 @@ Após a implementação dos testes unitário e integrado, eu rodei os testes par
 
 A decisão de manter as entidades LaudoAvaliacao e OrdemServico em tabelas separadas foi tomada para representar melhor a estrutura do domínio e manter a separação das informações.
 
-### Fase 1 - Checkpoint 3
+### Fase 1 - Entrega
 
 #### Implementação
 

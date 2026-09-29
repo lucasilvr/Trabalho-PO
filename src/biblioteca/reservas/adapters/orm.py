@@ -35,6 +35,7 @@ def start_mappers():
             "reservas": relationship(
                 model.Reserva,
                 collection_class=list,
+                order_by=reservas.c.data_reserva,
             )
         }
     )

@@ -1,9 +1,9 @@
 from datetime import date
 from flask import Flask, request, jsonify
 
-from src.biblioteca.domain import model
-from src.biblioteca.adapters.repository import FakeRepository
-from src.biblioteca.service_layer.services import OrdemServicoService
+from src.biblioteca.manutencao.domain import model
+from src.biblioteca.manutencao.adapters.repository import FakeRepository
+from src.biblioteca.manutencao.service_layer.services import OrdemServicoService
 
 app = Flask(__name__)
 

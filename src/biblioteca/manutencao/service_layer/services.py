@@ -1,5 +1,5 @@
-from src.biblioteca.domain import model
-from src.biblioteca.adapters.repository import AbstractRepository
+from src.biblioteca.manutencao.domain import model
+from src.biblioteca.manutencao.adapters.repository import AbstractRepository
 
 class OrdemServicoService:
     def __init__(self, repository: AbstractRepository):

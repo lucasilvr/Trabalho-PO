@@ -4,8 +4,8 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.biblioteca.domain import model
-from src.biblioteca.adapters import orm
+from src.biblioteca.manutencao.domain import model
+from src.biblioteca.manutencao.adapters import orm
 
 @pytest.fixture
 def laudo_reparavel():

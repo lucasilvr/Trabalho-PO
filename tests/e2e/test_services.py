@@ -1,5 +1,5 @@
-from src.biblioteca.service_layer.services import OrdemServicoService
-from src.biblioteca.adapters.repository import FakeRepository
+from src.biblioteca.manutencao.service_layer.services import OrdemServicoService
+from src.biblioteca.manutencao.adapters.repository import FakeRepository
 
 
 def test_criar_ordem_servico(laudo_reparavel):

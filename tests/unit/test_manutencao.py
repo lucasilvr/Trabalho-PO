@@ -1,6 +1,6 @@
 import pytest
 
-from src.biblioteca.domain.model import (
+from src.biblioteca.manutencao.domain.model import (
     OrdemServico, 
     OrdemServicoStatus
 )

@@ -1,7 +1,7 @@
 from sqlalchemy import Table, Column, String, Date, Boolean, ForeignKey, Enum
 from sqlalchemy.orm import registry, relationship
 
-from src.biblioteca.domain import model
+from src.biblioteca.manutencao.domain import model
 
 mapper_registry = registry()
 metadata = mapper_registry.metadata

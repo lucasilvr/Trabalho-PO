@@ -1,4 +1,4 @@
-from src.biblioteca.adapters.repository import SqlAlchemyRepository
+from src.biblioteca.manutencao.adapters.repository import SqlAlchemyRepository
 
 def test_salvar_e_buscar_ordem_servico(session, ordem_servico):
     repo = SqlAlchemyRepository(session)

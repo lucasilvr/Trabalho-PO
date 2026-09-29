@@ -1,6 +1,6 @@
 import pytest
 
-from src.biblioteca.entrypoints.flask_app import app
+from src.biblioteca.manutencao.entrypoints.flask_app import app
 
 @pytest.fixture
 def client():

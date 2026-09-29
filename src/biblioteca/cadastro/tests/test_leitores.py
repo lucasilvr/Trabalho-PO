@@ -1,5 +1,5 @@
 import pytest
-from biblioteca.domain.model import Leitor, CategoriaLeitor
+from biblioteca.cadastro.domain.model import Leitor, CategoriaLeitor
 
 def test_invariante_limite_emprestimos_por_categoria():
     categoria_aluno = CategoriaLeitor(nome="Aluno", limite_emprestimos=2)

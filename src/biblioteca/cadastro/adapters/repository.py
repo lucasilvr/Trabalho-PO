@@ -1,5 +1,5 @@
 import abc
-from biblioteca.domain import model
+from biblioteca.cadastro.domain import model
 
 class AbstractLeitorRepository(abc.ABC):
     @abc.abstractmethod

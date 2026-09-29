@@ -1,5 +1,5 @@
-from biblioteca.domain import model
-from biblioteca.adapters.repository import AbstractLeitorRepository
+from biblioteca.cadastro.domain import model
+from biblioteca.cadastro.adapters.repository import AbstractLeitorRepository
 
 class CategoriaInvalida(Exception):
     pass

@@ -1,6 +1,6 @@
 from sqlalchemy import Table, MetaData, Column, Integer, String, Boolean, Date
 from sqlalchemy.orm import registry, composite  # <-- composite importado aqui
-from biblioteca.domain import model
+from biblioteca.cadastro.domain import model
 
 mapper_registry = registry()
 metadata = mapper_registry.metadata

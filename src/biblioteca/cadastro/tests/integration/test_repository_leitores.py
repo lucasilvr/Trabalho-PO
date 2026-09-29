@@ -1,5 +1,5 @@
-from biblioteca.domain import model
-from biblioteca.adapters import repository
+from biblioteca.cadastro.domain import model
+from biblioteca.cadastro.adapters import repository
 from sqlalchemy import text  
 
 def test_repository_pode_salvar_um_leitor(session):

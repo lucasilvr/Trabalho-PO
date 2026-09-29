@@ -1,8 +1,9 @@
 from flask import Flask, request, jsonify
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from biblioteca.service_layer import services
-from biblioteca.adapters import repository, orm
+from biblioteca.cadastro.adapters import orm
+from biblioteca.cadastro.service_layer import services
+from biblioteca.cadastro.adapters import repository
 
 app = Flask(__name__)
 

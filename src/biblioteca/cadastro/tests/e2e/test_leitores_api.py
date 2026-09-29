@@ -1,5 +1,5 @@
 import pytest
-from biblioteca.entrypoints.flask_app import app
+from biblioteca.cadastro.entrypoints.flask_app import app
 
 @pytest.fixture
 def client():

@@ -1,5 +1,5 @@
 import abc
-from biblioteca.domain import model
+from biblioteca.multas.domain import model
 
 class AbstractMultaRepository(abc.ABC):
     @abc.abstractmethod
@@ -19,3 +19,13 @@ class FakeMultaRepository(AbstractMultaRepository):
 
     def get(self, id_multa: str):
         return next((m for m in self._multas if m.id_multa == id_multa), None)
+
+class SqlAlchemyMultaRepository(AbstractMultaRepository):
+    def __init__(self, session):
+        self.session = session
+
+    def add(self, multa: model.Multa):
+        self.session.add(multa)
+
+    def get(self, id_multa: str) -> model.Multa:
+        return self.session.query(model.Multa).filter_by(id_multa=id_multa).first()

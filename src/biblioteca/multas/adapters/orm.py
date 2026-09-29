@@ -1,6 +1,6 @@
 from sqlalchemy import MetaData, Table, Column, Integer, String, Float, Date, ForeignKey
 from sqlalchemy.orm import registry, relationship
-from biblioteca.domain import model
+from biblioteca.multas.domain import model
 
 metadata = MetaData()
 mapper_registry = registry()

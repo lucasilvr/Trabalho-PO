@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from datetime import date
-from biblioteca.service_layer import services
-from biblioteca.adapters import repository
+from biblioteca.multas.service_layer import services
+from biblioteca.multas.adapters import repository
 
 @app.route("/multas/<id_multa>/pagar", methods=["POST"])
 def endpoint_pagar_multa(id_multa):

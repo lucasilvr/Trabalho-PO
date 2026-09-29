@@ -1,62 +1,49 @@
 from datetime import datetime
-
 from biblioteca.reservas.adapters.repository import AbstractFilaEsperaRepository
 from biblioteca.reservas.domain.model import FilaEspera, Reserva
-
 
 class FilaNaoEncontrada(Exception):
     pass
 
-
-def _obter_fila(repo: AbstractFilaEsperaRepository, id_livro: str) -> FilaEspera:
-    fila = repo.get(id_livro)
-    if fila is None:
-        raise FilaNaoEncontrada(f"Fila de espera do livro {id_livro} não encontrada")
-    return fila
-
-
 def reservar_livro(
-    repo: AbstractFilaEsperaRepository,
     id_reserva: str,
     id_leitor: str,
     id_livro: str,
     data_reserva: datetime,
+    repo: AbstractFilaEsperaRepository,
+    session,
 ) -> Reserva:
     fila = repo.get(id_livro)
     if fila is None:
         fila = FilaEspera(id_livro)
         repo.add(fila)
-
     reserva = Reserva(id_reserva, id_leitor, id_livro, data_reserva)
     fila.adicionar_reserva(reserva)
-
+    session.commit()
     return reserva
 
-
-def registrar_devolucao_exemplar(
-    repo: AbstractFilaEsperaRepository,
+def registrar_devolucao(
     id_livro: str,
     data_hora: datetime,
+    repo: AbstractFilaEsperaRepository,
+    session,
 ) -> FilaEspera:
-    fila = _obter_fila(repo, id_livro)
+    fila = repo.get(id_livro)
+    if fila is None:
+        raise FilaNaoEncontrada(f"Fila de espera do livro {id_livro} nao encontrada")
     fila.exemplar_devolvido(data_hora)
-
+    session.commit()
     return fila
-
 
 def atualizar_fila(
-    repo: AbstractFilaEsperaRepository,
     id_livro: str,
     data_hora_atual: datetime,
-) -> FilaEspera:
-    fila = _obter_fila(repo, id_livro)
-    fila.atualizar_fila(data_hora_atual)
-
-    return fila
-
-
-def consultar_fila(
     repo: AbstractFilaEsperaRepository,
-    id_livro: str,
+    session,
 ) -> FilaEspera:
-    return _obter_fila(repo, id_livro)
+    fila = repo.get(id_livro)
+    if fila is None:
+        raise FilaNaoEncontrada(f"Fila de espera do livro {id_livro} nao encontrada")
+    fila.atualizar_fila(data_hora_atual)
+    session.commit()
+    return fila

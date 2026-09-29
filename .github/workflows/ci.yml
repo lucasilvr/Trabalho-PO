@@ -1,0 +1,40 @@
+name: Emprestimo - CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/emprestimo-sandy
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout do codigo
+      uses: actions/checkout@v4
+
+    - name: Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Instalar dependencias
+      run: pip install -r requirements.txt
+
+    - name: Executar testes unitarios
+      run: >
+        pytest
+        tests/unit/test_emprestimo.py
+        tests/unit/test_fake_repository.py
+        tests/unit/test_services_emprestimo.py
+
+    - name: Executar testes de integracao
+      run: >
+        pytest
+        tests/integration/test_emprestimo_orm.py
+        tests/integration/test_emprestimo_repository.py
+
+    - name: Executar testes E2E
+      run: pytest tests/e2e/test_emprestimo_api.py

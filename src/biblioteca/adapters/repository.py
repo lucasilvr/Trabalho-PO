@@ -18,4 +18,4 @@ class FakeMultaRepository(AbstractMultaRepository):
         self._multas.add(multa)
 
     def get(self, id_multa: str):
-        return next((m for m in self._multas if m.id_leitor == id_multa), None)
+        return next((m for m in self._multas if m.id_multa == id_multa), None)

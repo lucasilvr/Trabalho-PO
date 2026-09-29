@@ -10,7 +10,7 @@ app = Flask(__name__)
 repository = FakeRepository([])
 service = OrdemServicoService(repository)
 
-@app.route("/ordens-servico", methods=["POST"])
+@app.post("/ordens-servico")
 def criar_ordem_servico():
     dados = request.get_json()
 
@@ -37,3 +37,70 @@ def criar_ordem_servico():
         }
     ), 201
 
+@app.get("/ordens-servico/<id_ordem>")
+def buscar_ordem_servico(id_ordem):
+    ordem_servico = service.buscar_ordem_servico(id_ordem)
+
+    if ordem_servico is None:
+        return jsonify(
+            {"erro": "Ordem de servico nao encontrada"}
+        ), 404
+
+    return jsonify(
+        {
+            "id_ordem": ordem_servico.id_ordem,
+            "status": ordem_servico.status.value,
+            "id_laudo": ordem_servico.laudo.id_laudo
+        }
+    )
+
+@app.post("/ordens-servico/<id_ordem>/iniciar")
+def iniciar_ordem_servico(id_ordem):
+
+    ordem_servico = service.executar_ordem_servico(id_ordem)
+
+    return jsonify(
+        {
+            "id_ordem": ordem_servico.id_ordem,
+            "status": ordem_servico.status.value
+        }
+    )
+
+@app.post("/ordens-servico/<id_ordem>/concluir")
+def concluir_ordem_servico(id_ordem):
+    ordem_servico = service.concluir_ordem_servico(id_ordem)
+
+    return jsonify(
+        {
+            "id_ordem": ordem_servico.id_ordem,
+            "status": ordem_servico.status.value
+        }
+    )
+
+@app.post("/ordens-servico/<id_ordem>/cancelar")
+def cancelar_ordem_servico(id_ordem):
+    ordem_servico = service.cancelar_ordem_servico(id_ordem)
+
+    return jsonify(
+        {
+            "id_ordem": ordem_servico.id_ordem,
+            "status": ordem_servico.status.value
+        }
+    )
+
+@app.get("/ordens-servico")
+def listar_ordens_servico():
+    ordens = service.listar_ordens_servico()
+
+    return jsonify(
+        [
+            {
+                "id_ordem": ordem.id_ordem,
+                "status": ordem.status.value
+            }
+            for ordem in ordens
+        ]
+    )
+
+if __name__ == "__main__":
+    app.run(debug=True)

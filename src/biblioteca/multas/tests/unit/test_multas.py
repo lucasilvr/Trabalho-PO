@@ -1,5 +1,5 @@
 from datetime import date
-from biblioteca.domain.model import Multa, Pagamento
+from biblioteca.multas.domain.model import Multa, Pagamento
 
 def test_multa_muda_para_quitada_com_pagamento_exato():
     multa = Multa("M1", "L1", 2, 5.0)

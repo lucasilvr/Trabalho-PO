@@ -10,11 +10,13 @@ class OrdemServicoStatus(Enum):
 class LaudoAvaliacao:
     def __init__(
         self,
+        id_laudo: str,
         id_item: str,
         descricao_dano: str,
         reparavel: bool,
         data_avaliacao: date
     ):
+        self.id_laudo = id_laudo
         self.id_item = id_item
         self.descricao_dano = descricao_dano
         self.reparavel = reparavel

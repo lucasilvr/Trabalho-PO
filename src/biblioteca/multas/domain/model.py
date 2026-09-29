@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import List
 
-@dataclass(frozen=True)
+@dataclass
 class Pagamento:
     valor: float
     data: date

@@ -10,7 +10,7 @@
 `505aceb` — feat: criar entidades
 Realizei a implementação do agregado, sendo composto pelas entidades "OrdemServico", que representa a solicitação de manutenção, e "LaudoAvaliacao", que registra as infromações relacionadas ao dano no exemplar, além do "OrdemServicoStatus", responsável por padronizar os estados possíveis de uma ordem de serviço.
 
-25-09-2026 
+28-09-2026 
 `a66c65` — feat: implementar comportamento nas entidades
 Foquei na validação das condições necessárias para a criação e execução da reparação de dano no exemplar.
 
@@ -22,7 +22,7 @@ Foquei na validação das condições necessárias para a criação e execução
 
 #### Testes
 
-25-09-2026 
+28-09-2026 
 `2200aac` — feat: adicionar testes unitários
 Os testes unitários verificam as principais regras de criação do agregado: 
 - O primeiro teste valida a criação de uma OrdemServico com dados válidos com o status "ABERTA".

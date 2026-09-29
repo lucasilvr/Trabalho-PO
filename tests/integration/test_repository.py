@@ -1,6 +1,3 @@
-from datetime import date
-
-from src.biblioteca.domain import model
 from src.biblioteca.adapters.repository import SqlAlchemyRepository
 
 def test_salvar_e_buscar_ordem_servico(session, ordem_servico):

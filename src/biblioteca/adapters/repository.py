@@ -8,7 +8,7 @@ class AbstractRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, id_ordem: str) -> model.OrdemServico:
+    def get(self, id_ordem: str) -> model.OrdemServico | None:
         raise NotImplementedError
 
     @abstractmethod
@@ -22,7 +22,7 @@ class SqlAlchemyRepository(AbstractRepository):
     def add(self, ordem_servico: model.OrdemServico) -> None:
         self.session.add(ordem_servico)
 
-    def get(self, id_ordem: str) -> model.OrdemServico:
+    def get(self, id_ordem: str) -> model.OrdemServico | None:
         return (
             self.session.query(model.OrdemServico)
             .filter_by(id_ordem=id_ordem)

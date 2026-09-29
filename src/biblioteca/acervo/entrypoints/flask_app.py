@@ -1,13 +1,13 @@
 from flask import Flask, request, jsonify
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from src.biblioteca.acervo.adapters import orm
-from src.biblioteca.acervo.adapters import repository
-from src.biblioteca.acervo.service_layer import services
+from biblioteca.acervo.adapters import orm
+from biblioteca.acervo.adapters import repository
+from biblioteca.acervo.service_layer import services
 
 app = Flask(__name__)
 orm.start_mappers()
-engine = create_engine('sqlite:///biblioteca.db')
+engine = create_engine('sqlite:///:memory:')
 orm.metadata.create_all(engine)
 get_session = sessionmaker(bind=engine)
 

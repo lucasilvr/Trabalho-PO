@@ -333,7 +333,7 @@ Criei as interfaces do repositório de multas e a versão Fake em memória.
 
 29 - 09 - 2026
 `39f04f5` — feat: mapeamento orm de multa e pagamento criados
-`[INSERIR HASH]` — feat(adapters): implementa SqlAlchemyMultaRepository e ajusta caminhos de importacao
+`3b9ac2f` — feat: classe do banco adicionada e caminho de importação corrigido
 Fiz o mapeamento das entidades para o banco de dados usando SQLAlchemy de forma imperativa e adicionei a classe concreta do repositório (`SqlAlchemyMultaRepository`) para lidar com as operações reais.
 
 #### Arquivos
@@ -345,7 +345,7 @@ Fiz o mapeamento das entidades para o banco de dados usando SQLAlchemy de forma 
 #### Testes
 
 29 - 09 - 2026 
-`[INSERIR HASH]` — test: adiciona testes e2e, de integracao, arquivo conftest local e corrige unitarios
+`9567858` — test: correção dos tests e adicao do arquivo conftest.py
 Criei os testes de integração para o repositório SQL (`test_multas_repository.py`), validando a persistência física dos agregados.
 
 #### Decisão de projeto
@@ -362,8 +362,8 @@ Criei os testes de integração para o repositório SQL (`test_multas_repository
 `2e276da` — fix: correção da busca no repositorio fake (multa)
 `433bcd6` — feat: service layer criada
 `b9de837` — feat: api de processamento de pagamento criada
-`[INSERIR HASH]` — chore: adiciona pacote requests ao requirements.txt para corrigir quebra na CI
-`[INSERIR HASH]` — fix: ajusta rotas de importacao interna e adiciona arquivos __init__ faltantes
+`ec8daec` — chore: adicao do pacote requests
+`ff9e5ba` — fix: importacoes ajustadas e arquivos __init__ faltantes adicionados
 Consertei o `FakeMultaRepository`, construí o service para orquestrar a baixa da multa e criei o endpoint POST no Flask. Retifiquei todas as importações relativas ao pacote `multas` e instalei dependências em falta que estavam quebrando a pipeline de CI.
 
 #### Arquivos

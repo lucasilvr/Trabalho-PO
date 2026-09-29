@@ -262,3 +262,27 @@ Implementação do teste de integração com SQLite instanciado em memória, gar
 #### Decisão de projeto
 29-09-2026 
 Optei por não criar um repositório isolado para a `Reserva`. Sendo ela um objeto interno do agregado, suas persistências deverão ser lidadas exclusivamente através da entidade raiz `FilaEspera`, preservando a consistência arquitetural.
+
+### Fase 1 — Entrega
+
+#### Implementação
+29-09-2026 
+Reorganizei o módulo de Reservas na estrutura adotada pelo grupo (`src/biblioteca/reservas/` com `domain`, `adapters`, `service_layer`, `entrypoints` e `tests`). Defini a igualdade de `Reserva` e `FilaEspera` pela identidade (`id_reserva` e `id_livro`), adicionei o método `list` e o `FakeFilaEsperaRepository` ao repositório, e implementei a camada de serviço com os casos de uso de reservar livro, registrar devolução e atualizar a fila. Por fim, criei a API Flask que expõe esses casos de uso.
+
+#### Arquivos
+- `src/biblioteca/reservas/domain/model.py`
+- `src/biblioteca/reservas/adapters/repository.py`
+- `src/biblioteca/reservas/service_layer/services.py`
+- `src/biblioteca/reservas/entrypoints/flask_app.py`
+- `src/biblioteca/reservas/tests/unit/test_fake_repository_reservas.py`
+- `src/biblioteca/reservas/tests/unit/test_services_reservas.py`
+- `src/biblioteca/reservas/tests/integration/test_reserva_repository.py`
+- `src/biblioteca/reservas/tests/e2e/test_reservas_api.py`
+
+#### Testes
+29-09-2026 
+Testes unitários da camada de serviço usando `FakeFilaEsperaRepository` e uma `FakeSession`, que registra se o `commit` foi chamado. Testes de integração que inserem dados com SQL puro e verificam se o repositório recupera a fila com as reservas na ordem de chegada e lista todas as filas. Na API, um teste E2E do caminho feliz (reserva, devolução e transferência do direito após 48 horas) e um do caminho de erro (livro sem fila de espera).
+
+#### Decisão de projeto
+29-09-2026 
+Os serviços recebem o repositório abstrato e a sessão, e fazem o `commit` somente no caminho feliz, deixando o endpoint Flask responsável apenas por traduzir a requisição HTTP e as exceções. A devolução e a atualização operam sobre a `FilaEspera`, e não sobre a `Reserva` isolada, pois a invariante de transferência do direito após 48 horas pertence à raiz do agregado. O relacionamento ORM ordena as reservas por `data_reserva`, preservando a ordem de chegada da fila ao carregar do banco.

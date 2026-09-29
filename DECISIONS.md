@@ -163,7 +163,6 @@ Centralizar a criação de objetos de teste no conftest.py para promover reutili
 ### Fase 1 — Checkpoint 1
 
 #### Implementação
-`[hash_do_commit]` — feat(acervo): cria estrutura inicial do livro e exemplar
 Implementei o modelo de domínio do agregado de Acervo. Criei as entidades `Livro` (Raiz de Agregado) e `Exemplar`, além de implementar a regra de negócio central que impede a inativação de um livro no catálogo caso ele possua exemplares com status de "emprestado".
 
 #### Arquivos

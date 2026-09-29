@@ -13,3 +13,8 @@ def test_reserva_expira_apos_48_horas_disponivel():
     data_consulta = data_disponivel + timedelta(hours=49)
     assert reserva.esta_expirada(data_consulta) is True
     
+
+def test_reservas_com_mesmo_id_sao_iguais():
+    reserva1 = Reserva("RES-01", "LEITOR-1", "LIVRO-1", datetime(2026, 9, 22, 10, 0))
+    reserva2 = Reserva("RES-01", "LEITOR-2", "LIVRO-2", datetime(2026, 9, 23, 10, 0))
+    assert reserva1 == reserva2

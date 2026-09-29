@@ -1,5 +1,5 @@
 import abc
-from src.biblioteca.acervo.domain import model
+from biblioteca.acervo.domain import model
 
 class AbstractRepository(abc.ABC):
     @abc.abstractmethod

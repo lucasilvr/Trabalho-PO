@@ -285,4 +285,100 @@ Testes unitários da camada de serviço usando `FakeFilaEsperaRepository` e uma 
 
 #### Decisão de projeto
 29-09-2026 
-Os serviços recebem o repositório abstrato e a sessão, e fazem o `commit` somente no caminho feliz, deixando o endpoint Flask responsável apenas por traduzir a requisição HTTP e as exceções. A devolução e a atualização operam sobre a `FilaEspera`, e não sobre a `Reserva` isolada, pois a invariante de transferência do direito após 48 horas pertence à raiz do agregado. O relacionamento ORM ordena as reservas por `data_reserva`, preservando a ordem de chegada da fila ao carregar do banco.
+Os serviços recebem o repositório abstrato e a sessão, e fazem o commit somente no caminho feliz, deixando o endpoint Flask responsável apenas por traduzir a requisição HTTP e as exceções. A devolução e a atualização operam sobre a FilaEspera, e não sobre a Reserva isolada, pois a invariante de transferência do direito após 48 horas pertence à raiz do agregado. O relacionamento ORM ordena as reservas por data_reserva, preservando a ordem de chegada da fila ao carregar do banco.
+
+## Ana Laura
+
+### Fase 1 — Checkpoint 1
+
+#### Implementação
+
+23 - 09 - 2026 e 25 - 09 - 2026
+`2d34527` — chore: inicializa pacote de dominio
+`1956c77` — chore: inicializa pacote de adaptadores
+`362f17e` — chore: arquivo de registros de decisoes individuais criado
+`abdc50e` — chore: arquivo init.py da biblioteca criado
+`d0b2356` — chore: arquivos de requirements criado
+Criei a estrutura de pastas do meu agregado e o arquivo de decisões individuais. Também adicionei as dependências iniciais do projeto.
+
+28 - 09 - 2026
+`d64eec2` — feat: entidades multa e pagamento criadas
+Desenvolvi a raiz de agregado `Multa` e o value object `Pagamento`. A classe principal agora protege a invariante, alterando o status apenas com o pagamento total.
+
+#### Arquivos
+
+- `src/biblioteca/multas/domain/model.py`
+- `src/biblioteca/multas/tests/unit/test_multas.py`
+- `requirements.txt`
+- `DECISIONS.md`
+
+#### Testes
+
+28 - 09 - 2026 Criei testes unitários para garantir que a regra de quitação da multa funciona. Eles validam tanto pagamentos exatos quanto pagamentos insuficientes.
+
+#### Decisão de projeto
+
+28 - 09 - 2026 Modelei `Pagamento` como Value Object por ser apenas um registro transacional. Inicialmente utilizou-se imutabilidade estrita (`frozen=True`), que posteriormente precisou ser flexibilizada para garantir a integração com a injeção de estado do SQLAlchemy. Mantive a checagem de quitação dentro de `Multa` para não vazar a regra de negócio para a camada de serviços.
+
+---
+
+### Fase 1 — Checkpoint 2
+
+#### Implementação
+
+28 - 09 - 2026
+`2392022` — feat: interface de repositorio fake para as multas criado
+`2dd4b59` — fix: correção na busca no repository.py
+Criei as interfaces do repositório de multas e a versão Fake em memória.
+
+29 - 09 - 2026
+`39f04f5` — feat: mapeamento orm de multa e pagamento criados
+`3b9ac2f` — feat: classe do banco adicionada e caminho de importação corrigido
+Fiz o mapeamento das entidades para o banco de dados usando SQLAlchemy de forma imperativa e adicionei a classe concreta do repositório (`SqlAlchemyMultaRepository`) para lidar com as operações reais.
+
+#### Arquivos
+
+- `src/biblioteca/multas/adapters/__init__.py`
+- `src/biblioteca/multas/adapters/orm.py`
+- `src/biblioteca/multas/adapters/repository.py`
+
+#### Testes
+
+29 - 09 - 2026 
+`9567858` — test: correção dos tests e adicao do arquivo conftest.py
+Criei os testes de integração para o repositório SQL (`test_multas_repository.py`), validando a persistência física dos agregados.
+
+#### Decisão de projeto
+
+29 - 09 - 2026 Isolei o mapeamento no adapter usando o SQLAlchemy de forma imperativa. Isso manteve meu domínio puro. A equipe decidiu manter a segregação arquitetural dentro das pastas de cada agregado (ex: `src/biblioteca/multas/domain`), pelo que todos os caminhos de importação foram ajustados para refletir este encapsulamento modular.
+
+---
+
+### Fase 1 — Entrega
+
+#### Implementação
+
+29 - 09 - 2026 
+`2e276da` — fix: correção da busca no repositorio fake (multa)
+`433bcd6` — feat: service layer criada
+`b9de837` — feat: api de processamento de pagamento criada
+`ec8daec` — chore: adicao do pacote requests
+`ff9e5ba` — fix: importacoes ajustadas e arquivos __init__ faltantes adicionados
+Consertei o `FakeMultaRepository`, construí o service para orquestrar a baixa da multa e criei o endpoint POST no Flask. Retifiquei todas as importações relativas ao pacote `multas` e instalei dependências em falta que estavam quebrando a pipeline de CI.
+
+#### Arquivos
+
+- `src/biblioteca/multas/service_layer/services.py`
+- `src/biblioteca/multas/entrypoints/flask_app.py`
+- `src/biblioteca/multas/tests/unit/test_services.py`
+- `src/biblioteca/multas/tests/conftest.py`
+- `src/biblioteca/multas/tests/e2e/test_api_multas.py`
+- `src/biblioteca/multas/tests/integration/test_multas_repository.py`
+
+#### Testes
+
+29 - 09 - 2026 Adicionei o teste E2E real com chamadas de rede para simular o pagamento e um arquivo `conftest.py` local no módulo de multas para injetar um banco de dados SQLite em memória estritamente para o meu contexto, resolvendo conflitos de estado com outras partes do projeto.
+
+#### Decisão de projeto
+
+29 - 09 - 2026 Deixei o service apenas orquestrando chamadas entre API e repositório. Toda a regra de validação do valor continuou presa com segurança na entidade `Multa`.

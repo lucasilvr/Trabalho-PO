@@ -1,9 +1,9 @@
 import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, clear_mappers
-from src.biblioteca.acervo.adapters import orm
-from src.biblioteca.acervo.domain import model
-from src.biblioteca.acervo.adapters import repository
+from biblioteca.acervo.adapters import orm
+from biblioteca.acervo.domain import model
+from biblioteca.acervo.adapters import repository
 
 @pytest.fixture
 def session():

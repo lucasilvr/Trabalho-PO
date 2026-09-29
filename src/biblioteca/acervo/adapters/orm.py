@@ -1,6 +1,6 @@
 from sqlalchemy import Table, MetaData, Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.orm import registry, relationship
-from src.biblioteca.acervo.domain import model
+from biblioteca.acervo.domain import model
 
 mapper_registry = registry()
 metadata = mapper_registry.metadata

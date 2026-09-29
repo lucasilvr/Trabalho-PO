@@ -1,5 +1,5 @@
 import pytest
-from src.biblioteca.acervo.domain.model import Livro, Exemplar
+from biblioteca.acervo.domain.model import Livro, Exemplar
 
 def test_nao_deve_inativar_livro_emprestado():
 

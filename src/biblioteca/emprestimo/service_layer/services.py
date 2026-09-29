@@ -1,7 +1,7 @@
 from datetime import date
 
-from src.biblioteca.adapters.repository import AbstractRepository
-from src.biblioteca.domain.model import ItemEmprestado
+from biblioteca.emprestimo.adapters.repository import AbstractRepository
+from biblioteca.emprestimo.domain.model import ItemEmprestado
 
 
 def registrar_emprestimo(

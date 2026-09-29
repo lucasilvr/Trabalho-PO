@@ -3,8 +3,8 @@ from datetime import date
 from flask import Flask, jsonify, request
 from sqlalchemy.orm.exc import NoResultFound
 
-from src.biblioteca.adapters.repository import SqlAlchemyRepository
-from src.biblioteca.service_layer import services
+from biblioteca.emprestimo.adapters.repository import SqlAlchemyRepository
+from biblioteca.emprestimo.service_layer import services
 
 
 def create_app(session):

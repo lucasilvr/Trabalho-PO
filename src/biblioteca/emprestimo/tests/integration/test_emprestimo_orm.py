@@ -4,8 +4,8 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from src.biblioteca.adapters import orm
-from src.biblioteca.domain import model
+from biblioteca.emprestimo.adapters import orm
+from biblioteca.emprestimo.domain import model
 
 
 @pytest.fixture

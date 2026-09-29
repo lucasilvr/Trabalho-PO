@@ -2,8 +2,8 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.biblioteca.adapters import orm
-from src.biblioteca.entrypoints.flask_app import create_app
+from biblioteca.emprestimo.adapters import orm
+from biblioteca.emprestimo.entrypoints.flask_app import create_app
 
 
 @pytest.fixture

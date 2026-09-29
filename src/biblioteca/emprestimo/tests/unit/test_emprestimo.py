@@ -1,6 +1,6 @@
 from datetime import date
 
-from src.biblioteca.domain.model import ItemEmprestado
+from biblioteca.emprestimo.domain.model import ItemEmprestado
 
 
 def test_item_emprestado_esta_atrasado_quando_prazo_expirou():

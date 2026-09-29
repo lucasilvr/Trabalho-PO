@@ -1,7 +1,7 @@
 from datetime import date
 
-from src.biblioteca.adapters.repository import FakeRepository
-from src.biblioteca.domain.model import ItemEmprestado
+from biblioteca.emprestimo.adapters.repository import FakeRepository
+from biblioteca.emprestimo.domain.model import ItemEmprestado
 
 
 def test_fake_repository_adiciona_busca_e_lista_itens():

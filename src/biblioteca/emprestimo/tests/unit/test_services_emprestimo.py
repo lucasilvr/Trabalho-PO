@@ -1,8 +1,8 @@
 from datetime import date
 
-from src.biblioteca.adapters.repository import FakeRepository
-from src.biblioteca.domain.model import ItemEmprestado
-from src.biblioteca.service_layer import services
+from biblioteca.emprestimo.adapters.repository import FakeRepository
+from biblioteca.emprestimo.domain.model import ItemEmprestado
+from biblioteca.emprestimo.service_layer import services
 
 
 def test_registrar_emprestimo_adiciona_item_ao_repositorio():

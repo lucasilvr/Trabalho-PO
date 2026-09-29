@@ -4,9 +4,9 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from src.biblioteca.adapters import orm
-from src.biblioteca.adapters.repository import SqlAlchemyRepository
-from src.biblioteca.domain.model import ItemEmprestado
+from biblioteca.emprestimo.adapters import orm
+from biblioteca.emprestimo.adapters.repository import SqlAlchemyRepository
+from biblioteca.emprestimo.domain.model import ItemEmprestado
 
 
 @pytest.fixture

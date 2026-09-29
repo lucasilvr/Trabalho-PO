@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Date, String, Table
 from sqlalchemy.orm import registry
 
-from src.biblioteca.domain import model
+from biblioteca.emprestimo.domain import model
 
 
 mapper_registry = registry()

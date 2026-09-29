@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.biblioteca.domain import model
+from biblioteca.emprestimo.domain import model
 
 
 class AbstractRepository(ABC):

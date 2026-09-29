@@ -3,7 +3,8 @@ from sqlalchemy.orm import registry, relationship
 
 from src.biblioteca.domain import model
 
-metadata = registry().metadata
+mapper_registry = registry()
+metadata = mapper_registry.metadata
 
 laudo_avaliacao = Table(
     "laudo_avaliacao",
@@ -29,12 +30,12 @@ ordens_servico = Table(
 )
 
 def map_ordem_servico():    
-    laudo_mapper = registry().map_imperatively(
+    laudo_mapper = mapper_registry.map_imperatively(
         model.LaudoAvaliacao,
         laudo_avaliacao
     )
 
-    registry().map_imperatively(
+    mapper_registry.map_imperatively(
         model.OrdemServico,
         ordens_servico,
         properties={
@@ -46,4 +47,4 @@ def map_ordem_servico():
     )
 
 def clear_mappings():
-    registry().dispose()
+    mapper_registry.dispose()

@@ -23,7 +23,7 @@ def session():
     session.close()
     orm.clear_mappings()
 
-def test_salvar_e_buscar_ordem_servico():
+def test_salvar_e_buscar_ordem_servico(session):
     repo = SqlAlchemyRepository(session)
 
     # Arrange
@@ -51,45 +51,45 @@ def test_salvar_e_buscar_ordem_servico():
     assert ordem_busca.id_ordem == ordem_servico.id_ordem
     assert ordem_busca.laudo.id_laudo == ordem_servico.laudo.id_laudo
 
-    def test_listar_ordens_servico():
-        repo = SqlAlchemyRepository(session)
+def test_listar_ordens_servico(session):
+    repo = SqlAlchemyRepository(session)
 
-        # Arrange
-        laudo1 = model.LaudoAvaliacao(
-            id_laudo="LAUDO-001",
-            id_item="ITEM-001",
-            descricao_dano="Capa danificada",
-            reparavel=True,
-            data_avaliacao=date.today()
-        )
+    # Arrange
+    laudo1 = model.LaudoAvaliacao(
+        id_laudo="LAUDO-001",
+        id_item="ITEM-001",
+        descricao_dano="Capa danificada",
+        reparavel=True,
+        data_avaliacao=date.today()
+    )
 
-        ordem1 = model.OrdemServico(
-            id_ordem="OS-001",  
-            laudo=laudo1,
-            exemplar_disponivel=True
-        )
+    ordem1 = model.OrdemServico(
+        id_ordem="OS-001",  
+        laudo=laudo1,
+        exemplar_disponivel=True
+    )
 
-        laudo2 = model.LaudoAvaliacao(
-            id_laudo="LAUDO-002",
-            id_item="ITEM-002",
-            descricao_dano="Páginas rasgadas",
-            reparavel=True,
-            data_avaliacao=date.today()
-        )
+    laudo2 = model.LaudoAvaliacao(
+        id_laudo="LAUDO-002",
+        id_item="ITEM-002",
+        descricao_dano="Páginas rasgadas",
+        reparavel=True,
+        data_avaliacao=date.today()
+    )
 
-        ordem2 = model.OrdemServico(
-            id_ordem="OS-002",  
-            laudo=laudo2,
-            exemplar_disponivel=True
-        )
+    ordem2 = model.OrdemServico(
+        id_ordem="OS-002",  
+        laudo=laudo2,
+        exemplar_disponivel=True
+    )
 
-        # Act
-        repo.add(ordem1)
-        repo.add(ordem2)
-        session.commit()
+    # Act
+    repo.add(ordem1)
+    repo.add(ordem2)
+    session.commit()
 
-        ordens_listadas = repo.list()
+    ordens_listadas = repo.list()
 
-        # Assert
-        assert len(ordens_listadas) == 2
-        assert {ordem.id_ordem for ordem in ordens_listadas} == {"OS-001", "OS-002"}
+    # Assert
+    assert len(ordens_listadas) == 2
+    assert {ordem.id_ordem for ordem in ordens_listadas} == {"OS-001", "OS-002"}

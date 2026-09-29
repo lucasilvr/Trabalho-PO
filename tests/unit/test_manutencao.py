@@ -9,6 +9,7 @@ from src.biblioteca.domain.model import (
 def test_criar_ordem_servico_com_status_aberta():
     # Arrange
     laudo = LaudoAvaliacao(
+        id_laudo="LAUDO-001",
         id_item="ITEM-001",
         descricao_dano="Capa danificada",
         reparavel=True,
@@ -28,6 +29,7 @@ def test_criar_ordem_servico_com_status_aberta():
 def test_nao_criar_ordem_servico_com_dano_nao_reparavel():
     # Arrange
     laudo = LaudoAvaliacao(
+        id_laudo="LAUDO-002",
         id_item="ITEM-002",
         descricao_dano="Páginas rasgadas",
         reparavel=False,

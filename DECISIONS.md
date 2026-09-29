@@ -208,3 +208,80 @@ Foram criados testes End-to-End simulando um cliente real com a biblioteca `requ
 
 #### Decisão de projeto
 O uso de injeção de dependências no `services.py` permitiu desacoplar completamente o framework web (Flask) das regras do banco de dados e do domínio. O arquivo `.db` foi adicionado ao `.gitignore` para garantir que o banco de persistência local não interfira no repositório compartilhado do grupo.
+
+---
+
+## João Vicente Piller Menezes
+
+### Fase 1 — Checkpoint 1
+
+#### Implementação
+22-09-2026 
+`f185330` — feat: implementa entidade Reserva e limite de 48 horas
+Implementei o agregado Reserva e estabeleci as lógicas iniciais de verificação de prazo.
+
+23-09-2026 
+`99b7408` — feat: implementa agregado FilaEspera com transferencia de direito
+Implementei a entidade raiz FilaEspera, encarregada de gerenciar a fila e garantir a transferência de exemplares devolvidos para o próximo da fila, respeitando a invariante de 48 horas estipulada na proposta.
+
+#### Arquivos
+- `src/biblioteca/reservas/domain/model.py`
+- `src/biblioteca/reservas/tests/unit/test_reserva.py`
+- `src/biblioteca/reservas/tests/unit/test_fila_espera.py`
+
+#### Testes
+22-09-2026 
+Testes unitários cobrindo transições de estados de uma reserva (Pendente, Disponível e Expirada).
+
+23-09-2026 
+Teste unitário protegendo a invariante principal do domínio em `atualizar_fila()`.
+
+#### Decisão de projeto
+22-09-2026 
+A verificação `esta_expirada` recebe `data_hora_atual` como injeção de dependência via parâmetro de método, viabilizando o mock da passagem do tempo durante a bateria de testes unitários.
+
+### Fase 1 — Checkpoint 2
+
+#### Implementação
+28-09-2026 
+`2496e8f` — feat: adiciona mapeamento ORM para reserva e fila de espera
+
+29-09-2026 
+`75a7802` — feat: adiciona repository pattern e integra ORM no Checkpoint 2
+Abstração do acesso a banco via Repository, conforme o livro-texto, mantendo total ausência de dependências de infraestrutura na modelagem inicial.
+
+#### Arquivos
+- `src/biblioteca/reservas/adapters/orm.py`
+- `src/biblioteca/reservas/adapters/repository.py`
+- `src/biblioteca/reservas/tests/integration/test_reserva_orm.py`
+
+#### Testes
+29-09-2026 
+Implementação do teste de integração com SQLite instanciado em memória, garantindo persistência em cascata da lista de reservas aninhadas a uma fila.
+
+#### Decisão de projeto
+29-09-2026 
+Optei por não criar um repositório isolado para a `Reserva`. Sendo ela um objeto interno do agregado, suas persistências deverão ser lidadas exclusivamente através da entidade raiz `FilaEspera`, preservando a consistência arquitetural.
+
+### Fase 1 — Entrega
+
+#### Implementação
+29-09-2026 
+Reorganizei o módulo de Reservas na estrutura adotada pelo grupo (`src/biblioteca/reservas/` com `domain`, `adapters`, `service_layer`, `entrypoints` e `tests`). Implementei a camada de serviço com os casos de uso de reservar livro, registrar devolução de exemplar, atualizar a fila (expiração de 48 horas) e consultar a fila, além da API Flask correspondente. Também adicionei o `FakeFilaEsperaRepository` e o método `list` ao repositório.
+
+#### Arquivos
+- `src/biblioteca/reservas/adapters/repository.py`
+- `src/biblioteca/reservas/service_layer/services.py`
+- `src/biblioteca/reservas/entrypoints/flask_app.py`
+- `src/biblioteca/reservas/tests/unit/test_fake_repository_reservas.py`
+- `src/biblioteca/reservas/tests/unit/test_services_reservas.py`
+- `src/biblioteca/reservas/tests/integration/test_reserva_repository.py`
+- `src/biblioteca/reservas/tests/e2e/test_reservas_api.py`
+
+#### Testes
+29-09-2026 
+Testes unitários da camada de serviço com `FakeFilaEsperaRepository`, testes de integração com SQLite em memória validando a recuperação da fila na ordem de chegada e a persistência das mudanças de status, e testes E2E cobrindo os endpoints `POST /reservas`, `POST /filas/<id_livro>/devolucao`, `POST /filas/<id_livro>/atualizacao` e `GET /filas/<id_livro>`.
+
+#### Decisão de projeto
+29-09-2026 
+Os endpoints de devolução e atualização operam sobre a `FilaEspera`, e não sobre a `Reserva` isolada, pois a invariante de transferência do direito após 48 horas pertence à raiz do agregado. O relacionamento ORM ordena as reservas por `data_reserva`, garantindo que a ordem de chegada da fila seja preservada ao carregar do banco. A data e hora de referência continuam sendo recebidas como parâmetro, mantendo os casos de uso testáveis sem depender do relógio do sistema.

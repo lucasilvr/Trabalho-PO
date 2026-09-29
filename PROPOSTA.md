@@ -37,3 +37,13 @@ O sistema é composto por 5 agregados e 10 entidades de negócio distribuídos d
 * **Responsável:** Ana Laura Neuhaus Vega
 * **Entidades:** Multa (Raiz de Agregado) e Pagamento.
 * **Invariante de Domínio:** Uma Multa só altera seu status para "Quitada" se o valor do Pagamento processado for exatamente igual ou superior à taxa calculada automaticamente pelos dias de atraso.
+
+# Informações adicionais
+
+### Autor: Lucas Dias Silveira
+**Agregado escolhido:** Acervo (Livro e Exemplar)
+
+**Decisões Arquiteturais e de Design:**
+* **Modelagem de Domínio:** Escolhi estruturar `Livro` como a Raiz de Agregado e `Exemplar` como entidade interna subordinada. Isso garante que a regra de negócio central (a inativação do livro) valide todos os status dos exemplares em um único ponto de consistência.
+* **ORM Imperativo (Clássico):** A separação estrutural das tabelas no SQLAlchemy (em `orm.py`) permitiu manter as classes do domínio completamente puras, sem herdar dependências de infraestrutura, o que agilizou a execução dos testes unitários.
+* **Injeção de Dependência e Repository Pattern:** O uso da interface `AbstractRepository` na camada de serviço facilitou a criação e injeção do `FakeRepository`. Isso desacoplou as regras de negócio do banco de dados e permitiu validar a persistência em memória de forma isolada e performática.

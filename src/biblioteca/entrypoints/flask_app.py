@@ -6,7 +6,9 @@ from src.biblioteca.service_layer import services
 
 app = Flask(__name__)
 orm.start_mappers()
-get_session = sessionmaker(bind=create_engine('sqlite:///biblioteca.db'))
+engine = create_engine('sqlite:///biblioteca.db')
+orm.metadata.create_all(engine)
+get_session = sessionmaker(bind=engine)
 
 @app.route("/livros", methods=["POST"])
 def add_livro():

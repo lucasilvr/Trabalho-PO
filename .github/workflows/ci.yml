@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches:
-      - feat/conservacao-karine
+    branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
 
 jobs:
   tests:

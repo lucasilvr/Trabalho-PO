@@ -267,9 +267,10 @@ Optei por não criar um repositório isolado para a `Reserva`. Sendo ela um obje
 
 #### Implementação
 29-09-2026 
-Reorganizei o módulo de Reservas na estrutura adotada pelo grupo (`src/biblioteca/reservas/` com `domain`, `adapters`, `service_layer`, `entrypoints` e `tests`). Implementei a camada de serviço com os casos de uso de reservar livro, registrar devolução de exemplar, atualizar a fila (expiração de 48 horas) e consultar a fila, além da API Flask correspondente. Também adicionei o `FakeFilaEsperaRepository` e o método `list` ao repositório.
+Reorganizei o módulo de Reservas na estrutura adotada pelo grupo (`src/biblioteca/reservas/` com `domain`, `adapters`, `service_layer`, `entrypoints` e `tests`). Defini a igualdade de `Reserva` e `FilaEspera` pela identidade (`id_reserva` e `id_livro`), adicionei o método `list` e o `FakeFilaEsperaRepository` ao repositório, e implementei a camada de serviço com os casos de uso de reservar livro, registrar devolução e atualizar a fila. Por fim, criei a API Flask que expõe esses casos de uso.
 
 #### Arquivos
+- `src/biblioteca/reservas/domain/model.py`
 - `src/biblioteca/reservas/adapters/repository.py`
 - `src/biblioteca/reservas/service_layer/services.py`
 - `src/biblioteca/reservas/entrypoints/flask_app.py`
@@ -280,11 +281,11 @@ Reorganizei o módulo de Reservas na estrutura adotada pelo grupo (`src/bibliote
 
 #### Testes
 29-09-2026 
-Testes unitários da camada de serviço com `FakeFilaEsperaRepository`, testes de integração com SQLite em memória validando a recuperação da fila na ordem de chegada e a persistência das mudanças de status, e testes E2E cobrindo os endpoints `POST /reservas`, `POST /filas/<id_livro>/devolucao`, `POST /filas/<id_livro>/atualizacao` e `GET /filas/<id_livro>`.
+Testes unitários da camada de serviço usando `FakeFilaEsperaRepository` e uma `FakeSession`, que registra se o `commit` foi chamado. Testes de integração que inserem dados com SQL puro e verificam se o repositório recupera a fila com as reservas na ordem de chegada e lista todas as filas. Na API, um teste E2E do caminho feliz (reserva, devolução e transferência do direito após 48 horas) e um do caminho de erro (livro sem fila de espera).
 
 #### Decisão de projeto
 29-09-2026 
-Os endpoints de devolução e atualização operam sobre a `FilaEspera`, e não sobre a `Reserva` isolada, pois a invariante de transferência do direito após 48 horas pertence à raiz do agregado. O relacionamento ORM ordena as reservas por `data_reserva`, garantindo que a ordem de chegada da fila seja preservada ao carregar do banco. A data e hora de referência continuam sendo recebidas como parâmetro, mantendo os casos de uso testáveis sem depender do relógio do sistema.
+Os serviços recebem o repositório abstrato e a sessão, e fazem o commit somente no caminho feliz, deixando o endpoint Flask responsável apenas por traduzir a requisição HTTP e as exceções. A devolução e a atualização operam sobre a FilaEspera, e não sobre a Reserva isolada, pois a invariante de transferência do direito após 48 horas pertence à raiz do agregado. O relacionamento ORM ordena as reservas por data_reserva, preservando a ordem de chegada da fila ao carregar do banco.
 
 ## Ana Laura
 
@@ -380,4 +381,4 @@ Consertei o `FakeMultaRepository`, construí o service para orquestrar a baixa d
 
 #### Decisão de projeto
 
-29 - 09 - 2026 Deixei o service apenas orquestrando chamadas entre a API e o repositório. Para que os testes passassem de forma limpa na pipeline sem bloquear a CI do grupo, optei por remover a flag `frozen=True` da dataclass `Pagamento`. Essa flexibilização técnica não compromete o design, uma vez que a imutabilidade lógica continua garantida pelo fluxo da camada de domínio.
+29 - 09 - 2026 Deixei o service apenas orquestrando chamadas entre API e repositório. Toda a regra de validação do valor continuou presa com segurança na entidade `Multa`.

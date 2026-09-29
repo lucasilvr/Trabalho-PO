@@ -7,7 +7,7 @@ class AbstractFilaEsperaRepository(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get(self, id_livro: str) -> model.FilaEspera | None:
+    def get(self, id_livro: str) -> model.FilaEspera:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -21,7 +21,7 @@ class SqlAlchemyFilaEsperaRepository(AbstractFilaEsperaRepository):
     def add(self, fila: model.FilaEspera):
         self.session.add(fila)
 
-    def get(self, id_livro: str) -> model.FilaEspera | None:
+    def get(self, id_livro: str) -> model.FilaEspera:
         return self.session.query(model.FilaEspera).filter_by(id_livro=id_livro).first()
 
     def list(self) -> list[model.FilaEspera]:
@@ -34,7 +34,7 @@ class FakeFilaEsperaRepository(AbstractFilaEsperaRepository):
     def add(self, fila: model.FilaEspera):
         self._filas.add(fila)
 
-    def get(self, id_livro: str) -> model.FilaEspera | None:
+    def get(self, id_livro: str) -> model.FilaEspera:
         return next((f for f in self._filas if f.id_livro == id_livro), None)
 
     def list(self) -> list[model.FilaEspera]:

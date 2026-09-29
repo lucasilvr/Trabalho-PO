@@ -26,11 +26,27 @@ class Reserva:
 
     def expirar(self) -> None:
         self.status = "Expirada"
+
+    def __eq__(self, other):
+        if not isinstance(other, Reserva):
+            return False
+        return other.id_reserva == self.id_reserva
+
+    def __hash__(self):
+        return hash(self.id_reserva)
         
 class FilaEspera:
     def __init__(self, id_livro: str):
         self.id_livro = id_livro
         self.reservas: list[Reserva] = []
+
+    def __eq__(self, other):
+        if not isinstance(other, FilaEspera):
+            return False
+        return other.id_livro == self.id_livro
+
+    def __hash__(self):
+        return hash(self.id_livro)
 
     def adicionar_reserva(self, reserva: Reserva) -> None:
         self.reservas.append(reserva)

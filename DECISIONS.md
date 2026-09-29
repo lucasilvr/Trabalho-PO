@@ -67,3 +67,43 @@ Após a implementação dos testes unitário e integrado, eu rodei os testes par
 #### Decisão de projeto
 
 A decisão de manter as entidades LaudoAvaliacao e OrdemServico em tabelas separadas foi tomada para representar melhor a estrutura do domínio e manter a separação das informações.
+
+### Fase 1 - Checkpoint 3
+
+#### Implementação
+
+29-09-2026 
+`b6061d5` — chore: adicionar github actions workflow
+Foi adicionado um workflow do GitHub Actions para automatizar a execução das validações do projeto a cada push e pull request. O pipeline realiza verificações de qualidade do código e execução dos testes, garantindo que alterações futuras não introduzam regressões e mantendo a consistência do processo de integração contínua.
+
+`8659f0f` — test: adicionar conftest
+Implementação do conftest.py para centralizar fixtures compartilhadas entre os testes, reduzindo duplicação de código, e facilitando a criação de cenários de teste reutilizáveis.
+
+`b9366aa` — feat: implementar service_layer com ajustes na coesão
+Desenvolvimento da camada de serviço (service_layer) para concentrar os casos de uso da aplicação e coordenar a interação entre domínio e repositórios. Durante a implementação, foram realizados ajustes para melhorar a coesão das responsabilidades, mantendo as regras de negócio dentro do domínio e delegando à camada de serviço apenas a orquestração das operações da aplicação.
+
+`ca87c3a` — feat: implementar API flask
+Foi desenvolvida uma API utilizando Flask para expor as funcionalidades da aplicação através de endpoints HTTP, permitindo a comunicação com as regras de negócio por meio da camada de serviço e estabelecendo a interface de entrada do sistema.
+
+#### Arquivos
+
+- `.github/workflows/ci.yml`
+- `src/biblioteca/service_layer/services.py`
+- `src/biblioteca/entrypoints/flask_app.py`
+- `tests/e2e/test_services.py`
+- `tests/e2e/test_api.py`
+- `tests/conftest.py`
+- `tests/pytest.ini`
+
+#### Testes
+
+29-09-2026 
+`b9366aa` — feat: implementar service_layer com ajustes na coesão
+Os testes da service_layer validam a interação entre a camada de aplicação e o repositório, garantindo que as operações de negócio sejam executadas correctamente através do uso do FakeRepository.
+
+`c93e7dd` —  test: adicionar teste da API
+Foram adicionados testes para validar o comportamento dos endpoints da API Flask. Os testes verificam as respostas retornadas pela aplicação, os códigos de status HTTP esperados e a integração entre a camada de apresentação e os casos de uso, garantindo o correto funcionamento da interface exposta ao cliente.
+
+#### Decisão de projeto
+
+Centralizar a criação de objetos de teste no conftest.py para promover reutilização e garantir a consistência na configuração dos testes em todas as camadas da aplicação.

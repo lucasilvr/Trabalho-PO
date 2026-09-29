@@ -27,3 +27,6 @@ jobs:
 
     - name: Executar teste de integração
       run: pytest tests/integration
+
+    - name: Executar teste estrutural
+      run: pytest tests/e2e

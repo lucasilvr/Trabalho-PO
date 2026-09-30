@@ -382,3 +382,69 @@ Consertei o `FakeMultaRepository`, construí o service para orquestrar a baixa d
 #### Decisão de projeto
 
 29 - 09 - 2026 Deixei o service apenas orquestrando chamadas entre API e repositório. Toda a regra de validação do valor continuou presa com segurança na entidade `Multa`.
+
+## Isabella Vieira da Motta
+
+### Fase 1 — Checkpoint 1
+
+#### Implementação
+23-09-2026 
+`2de12e2` — feat(leitores): cria Leitor e CategoriaLeitor
+Implementei o agregado de Cadastro de Leitores, criando a entidade raiz `Leitor` e o Value Object `CategoriaLeitor`, encapsulando a regra de limite de empréstimos.
+
+#### Arquivos
+- `src/biblioteca/domain/model.py`
+
+#### Testes
+24-09-2026 
+`70bc735` — test(leitores)
+Foram implementados testes unitários para garantir que as invariantes de limite de empréstimos por categoria e a regra de leitores inativos funcionam corretamente na camada de domínio.
+
+#### Decisão de projeto
+23-09-2026 
+A lógica de validação de empréstimos foi mantida estritamente na camada de domínio. Modelei `Leitor` como a raiz do agregado e `CategoriaLeitor` como um *Value Object*. Isso blinda o domínio e garante que o estado do utilizador apenas mude se as regras do produto forem respeitadas.
+
+### Fase 1 — Checkpoint 2
+
+#### Implementação
+28-09-2026 
+`a8aef88` — feat(leitores): adiciona AbstractLeitorRepository e FakeLeitorRepository
+`c550652` — feat(leitores): mapeia tabelas no SQLAlchemy e implementa repositorio real
+`be3b348` — fix(leitores): corrige importacao do composite no orm e declara repositorio
+Implementei o mapeamento ORM com SQLAlchemy e criei os repositórios abstrato, fake (para testes) e real.
+
+#### Arquivos
+- `src/biblioteca/adapters/repository.py`
+- `src/biblioteca/adapters/orm.py`
+- `tests/conftest.py`
+
+#### Testes
+28-09-2026 
+`09ee98a` — test(leitores): adiciona teste de integracao e config do banco em memoria[cite: 2]
+Foi configurada uma base de dados em memória (`conftest.py`) e criados testes de integração para validar o contrato do `Repository` com a base de dados real[cite: 2].
+
+#### Decisão de projeto
+28-09-2026 
+Optei pelo mapeamento imperativo do SQLAlchemy usando o padrão *Composite* para a `CategoriaLeitor`. Isto permitiu persistir a categoria na mesma tabela do leitor, otimizando a base de dados sem poluir as classes de domínio com detalhes de infraestrutura.
+
+### Fase 1 — Entrega
+
+#### Implementação
+28-09-2026 
+`332e5ce` — feat(leitores): implementa caso de uso para cadastro na camada de servicos
+`1ff7e08` — feat(leitores): cria endpoint POST /leitores na API Flask
+`68cf233` — feat(leitores): configura banco em memoria na api e adiciona testes e2e
+Desenvolvi a camada de serviços para orquestrar a criação do leitor e expus a funcionalidade através de um endpoint POST na API Flask com uma base de dados temporária.
+
+#### Arquivos
+- `src/biblioteca/service_layer/services.py`
+- `src/biblioteca/entrypoints/flask_app.py`
+- `tests/e2e/test_leitores_api.py`
+
+#### Testes
+28-09-2026 
+Foram adicionados testes End-to-End (E2E) simulando requisições HTTP diretas ao endpoint Flask utilizando o cliente de testes nativo, garantindo que a rota orquestra o caso de uso corretamente.
+
+#### Decisão de projeto
+28-09-2026 
+A camada de serviço foi utilizada para orquestrar as validações e a injeção do repositório, garantindo que o endpoint Flask apenas lide com tráfego web e não contenha regras de negócio.

@@ -412,6 +412,36 @@ Consertei o `FakeMultaRepository`, construí o service para orquestrar a baixa d
 
 29 - 09 - 2026 Deixei o service apenas orquestrando chamadas entre API e repositório. Toda a regra de validação do valor continuou presa com segurança na entidade `Multa`.
 
+---
+
+### Fase 2 — Checkpoint 1
+
+#### Implementação
+
+22 - 10 - 2026
+
+Documentei uma decisão arquitetural relacionada ao módulo de Penalidades, considerando a separação entre a API, a camada de serviço e as operações do domínio. O ADR apresenta o contexto da decisão, as alternativas consideradas e suas consequências para a organização e manutenção do módulo.
+
+#### Arquivos
+
+- `docs/adr/0003-api-flask-multas.md`
+
+#### Testes
+
+22 - 10 - 2026
+
+Conferi a decisão documentada em relação à implementação existente do módulo de Penalidades e às verificações automatizadas do projeto.
+
+#### Decisão de projeto
+
+22 - 10 - 2026
+
+A decisão documentada busca manter as responsabilidades da interface HTTP separadas da orquestração dos casos de uso e das regras de negócio do módulo de Penalidades.
+
+#### Uso de IA
+
+Se eu utilizar o rascunho produzido com auxílio de IA generativa, declararei esse uso e revisarei o conteúdo em relação ao código real de Penalidades, assumindo a responsabilidade pela versão final.
+
 ## Isabella Vieira da Motta
 
 ### Fase 1 — Checkpoint 1

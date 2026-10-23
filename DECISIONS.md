@@ -86,6 +86,35 @@ A camada de serviço foi utilizada para orquestrar as operações entre a API, o
 
 ---
 
+### Fase 2 — Checkpoint 1
+
+#### Implementação
+
+22 - 10 - 2026
+
+Contribuí para a documentação da arquitetura do sistema Biblioteca, descrevendo os estilos arquiteturais existentes, os atributos de qualidade priorizados, os trade-offs e a comparação com uma arquitetura alternativa. Também documentei a decisão de separar o domínio da infraestrutura de persistência por meio de um ADR relacionado ao módulo Empréstimo.
+
+#### Arquivos
+
+- `docs/arquitetura.md`
+- `docs/adr/0001-separacao-dominio-persistencia.md`
+
+#### Testes
+
+22 - 10 - 2026
+
+Conferi a documentação em relação à estrutura do código existente e aos componentes de domínio, persistência, camada de serviço e API. A validação da suíte automatizada deve ser confirmada pela CI do repositório.
+
+#### Decisão de projeto
+
+22 - 10 - 2026
+
+Registrei a separação entre domínio e persistência como uma decisão arquitetural, considerando o benefício de testar as regras de negócio sem depender diretamente do SQLAlchemy e o custo de manter camadas e abstrações adicionais.
+
+#### Uso de IA
+
+Utilizei IA generativa para auxiliar na elaboração e organização de um rascunho da documentação de arquitetura e do ADR. Revisei o conteúdo em relação ao código e ao histórico do repositório, sendo responsável pelas verificações, ajustes e versão final.
+
 ## Karine Vitória Marinho de Moraes
 
 ### Fase 1 - Checkpoint 1

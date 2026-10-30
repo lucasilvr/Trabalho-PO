@@ -23,7 +23,13 @@ exemplares = Table(
     Column("livro_isbn", ForeignKey("livros.isbn")),
 )
 
+
+def clear_mappers():
+    mapper_registry.dispose()
+
+
 def start_mappers():
+    clear_mappers()
     linhas_mapper = mapper_registry.map_imperatively(model.Exemplar, exemplares)
     mapper_registry.map_imperatively(
         model.Livro,

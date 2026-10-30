@@ -1,12 +1,9 @@
 from dataclasses import dataclass
 from typing import List
-
-
 @dataclass
 class Exemplar:
     id_exemplar: str
     status: str = "disponivel"
-
 
 class Livro:
     def __init__(self, isbn: str, titulo: str, autor: str):

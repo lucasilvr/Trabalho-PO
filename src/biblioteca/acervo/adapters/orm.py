@@ -23,13 +23,16 @@ exemplares = Table(
     Column("livro_isbn", ForeignKey("livros.isbn")),
 )
 
-
 def clear_mappers():
     mapper_registry.dispose()
 
 
 def start_mappers():
-    clear_mappers()
+    if getattr(model.Exemplar, "_sa_class_manager", None) is not None:
+        return
+    if getattr(model.Livro, "_sa_class_manager", None) is not None:
+        return
+
     linhas_mapper = mapper_registry.map_imperatively(model.Exemplar, exemplares)
     mapper_registry.map_imperatively(
         model.Livro,

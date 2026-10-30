@@ -1,6 +1,6 @@
 # ADR 0002 — Representar livro e exemplar separadamente no Acervo
 
-- **Status:** Aceita (confirmar com Lucas antes do commit)
+- **Status:** Aceita
 - **Autor:** Lucas Dias Silveira
 - **Data:** 22/10/2026
 
@@ -11,8 +11,6 @@ No domínio Biblioteca, um livro representa uma obra/catalogação, enquanto um 
 ## Decisão
 
 Manter Livro e Exemplar como conceitos distintos no módulo de Acervo, relacionando cada exemplar à obra correspondente. As operações sobre a obra e as operações sobre uma unidade física devem usar o conceito apropriado, respeitando as regras do domínio existentes no código.
-
-> Antes do commit, Lucas deve verificar se essa descrição corresponde ao modelo real implementado no módulo de Acervo e ajustar o texto, status ou data caso necessário.
 
 ## Alternativas consideradas
 

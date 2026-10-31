@@ -12,10 +12,14 @@ class OrdemServicoService:
         exemplar_disponivel: bool
     ) -> model.OrdemServico:
 
+        if not exemplar_disponivel:
+            raise ValueError(
+                "Não é possível criar uma ordem de serviço sem um exemplar disponível."
+            )
+
         ordem_servico = model.OrdemServico(
             id_ordem=id_ordem,
-            laudo=laudo,
-            exemplar_disponivel=exemplar_disponivel
+            laudo=laudo
         )
 
         self.repository.add(ordem_servico)

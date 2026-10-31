@@ -18,6 +18,5 @@ def test_nao_criar_ordem_servico_com_dano_nao_reparavel(laudo_irreparavel):
     ):
         OrdemServico(
             id_ordem="OS-002",
-            laudo=laudo_irreparavel,
-            exemplar_disponivel=True    
+            laudo=laudo_irreparavel
         )

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, DateTime, String, Table, ForeignKey
+from sqlalchemy import Column, DateTime, Integer, String, Table, ForeignKey
 from sqlalchemy.orm import registry, relationship
 from biblioteca.reservas.domain import model
 
@@ -14,6 +14,7 @@ reservas = Table(
     Column("data_reserva", DateTime, nullable=False),
     Column("status", String(20), nullable=False),
     Column("data_disponibilizacao", DateTime, nullable=True),
+    Column("prazo_retirada_horas", Integer, nullable=False, server_default=str(model.PRAZO_RETIRADA_PADRAO_HORAS)),
 )
 
 filas_espera = Table(

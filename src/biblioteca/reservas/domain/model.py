@@ -1,12 +1,15 @@
 from datetime import datetime, timedelta
 
+PRAZO_RETIRADA_PADRAO_HORAS = 48
+
 class Reserva:
     def __init__(
         self,
         id_reserva: str,
         id_leitor: str,
         id_livro: str,
-        data_reserva: datetime
+        data_reserva: datetime,
+        prazo_retirada_horas: int = PRAZO_RETIRADA_PADRAO_HORAS
     ):
         self.id_reserva = id_reserva
         self.id_leitor = id_leitor
@@ -14,6 +17,7 @@ class Reserva:
         self.data_reserva = data_reserva
         self.status = "Pendente"
         self.data_disponibilizacao: datetime | None = None
+        self.prazo_retirada_horas = prazo_retirada_horas
 
     def disponibilizar(self, data_hora: datetime) -> None:
         self.status = "Disponivel"
@@ -21,7 +25,7 @@ class Reserva:
 
     def esta_expirada(self, data_hora_atual: datetime) -> bool:
         if self.status == "Disponivel" and self.data_disponibilizacao is not None:
-            return (data_hora_atual - self.data_disponibilizacao) > timedelta(hours=48)
+            return (data_hora_atual - self.data_disponibilizacao) > timedelta(hours=self.prazo_retirada_horas)
         return False
 
     def expirar(self) -> None:

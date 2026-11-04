@@ -1,9 +1,9 @@
 from datetime import date
 
 from flask import Flask, jsonify, request
-from sqlalchemy.orm.exc import NoResultFound
 
 from biblioteca.emprestimo.adapters.repository import SqlAlchemyRepository
+from biblioteca.emprestimo.domain.exceptions import ItemNaoEncontrado
 from biblioteca.emprestimo.service_layer import services
 
 
@@ -89,7 +89,7 @@ def create_app(session):
                 id_item=id_item,
                 data_devolucao=data_devolucao,
             )
-        except NoResultFound:
+        except ItemNaoEncontrado:
             return jsonify({"erro": "Item não encontrado"}), 404
 
         session.commit()
@@ -116,7 +116,7 @@ def create_app(session):
                 id_item=id_item,
                 data_referencia=data,
             )
-        except NoResultFound:
+        except ItemNaoEncontrado:
             return jsonify({"erro": "Item não encontrado"}), 404
 
         return jsonify(

@@ -115,6 +115,40 @@ Registrei a separação entre domínio e persistência como uma decisão arquite
 
 Utilizei IA generativa para auxiliar na elaboração e organização de um rascunho da documentação de arquitetura e do ADR. Revisei o conteúdo em relação ao código e ao histórico do repositório, sendo responsável pelas verificações, ajustes e versão final.
 
+### Fase 2 — Checkpoint 2
+
+#### Implementação
+
+`f275b6f` — refactor(emprestimo): unifica contrato de item não encontrado
+
+Refatorei o contrato do repositório do agregado Empréstimo. Antes, `SqlAlchemyRepository.get` lançava `NoResultFound` e `FakeRepository.get` lançava `StopIteration` para o mesmo caso de item inexistente. Criei `ItemNaoEncontrado` no domínio, passei as duas implementações a levantar essa exceção e removi do entrypoint Flask o import de `NoResultFound`. No mesmo commit, documentei a violação, o código anterior, a refatoração e o custo em `docs/solid.md`.
+
+#### Arquivos
+
+- `src/biblioteca/emprestimo/domain/exceptions.py`
+- `src/biblioteca/emprestimo/adapters/repository.py`
+- `src/biblioteca/emprestimo/entrypoints/flask_app.py`
+- `src/biblioteca/emprestimo/tests/unit/test_repository_contract.py`
+- `src/biblioteca/emprestimo/tests/integration/test_emprestimo_repository.py`
+- `src/biblioteca/emprestimo/tests/e2e/test_emprestimo_api.py`
+- `docs/solid.md`
+
+#### Testes
+
+02/11/2026
+
+Mantive os testes da Fase 1 sem alteração e acrescentei testes para o contrato do repositório: o fake e o repositório SQLAlchemy devem levantar `ItemNaoEncontrado` para um item ausente. Também acrescentei um teste E2E para o endpoint de atraso com item inexistente. A suíte do Empréstimo passou com `25 passed`.
+
+#### Decisão de projeto
+
+02/11/2026
+
+Padronizei a ausência de item como uma exceção de domínio (`ItemNaoEncontrado`) em vez de deixar cada adapter expor a exceção nativa da sua tecnologia, porque o contrato do repositório precisa ser substituível sem alterar a camada HTTP.
+
+#### Uso de IA
+
+Utilizei IA generativa para analisar o código em busca de violações de SOLID, comparar alternativas de refatoração e organizar o rascunho de `docs/solid.md` e desta subseção. Conferi os trechos citados nos commits `4202941`, `719453d` e `1cd3fa3`, executei a suíte de testes e revisei o texto final; a decisão e a responsabilidade pela alteração são minhas.
+
 ## Karine Vitória Marinho de Moraes
 
 ### Fase 1 - Checkpoint 1

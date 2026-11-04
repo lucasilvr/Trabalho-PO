@@ -67,8 +67,7 @@ mesmo caso de uso: buscar um item inexistente. O repositório real lançava
 
 ### Refatoração
 
-Commit "depois": `[preencher com o hash do commit de refatoração]` — os arquivos
-alterados são:
+Commit "depois": `f275b6f` — os arquivos alterados são:
 
 - `src/biblioteca/emprestimo/domain/exceptions.py` (novo): define
   `ItemNaoEncontrado`, uma exceção de domínio que faz parte do contrato do

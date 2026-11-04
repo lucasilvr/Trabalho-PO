@@ -1,6 +1,6 @@
 from datetime import datetime
 from biblioteca.reservas.adapters.repository import AbstractFilaEsperaRepository
-from biblioteca.reservas.domain.model import FilaEspera, Reserva
+from biblioteca.reservas.domain.model import FilaEspera, Reserva, PRAZO_RETIRADA_PADRAO_HORAS
 
 class FilaNaoEncontrada(Exception):
     pass
@@ -12,12 +12,13 @@ def reservar_livro(
     data_reserva: datetime,
     repo: AbstractFilaEsperaRepository,
     session,
+    prazo_retirada_horas: int = PRAZO_RETIRADA_PADRAO_HORAS,
 ) -> Reserva:
     fila = repo.get(id_livro)
     if fila is None:
         fila = FilaEspera(id_livro)
         repo.add(fila)
-    reserva = Reserva(id_reserva, id_leitor, id_livro, data_reserva)
+    reserva = Reserva(id_reserva, id_leitor, id_livro, data_reserva, prazo_retirada_horas)
     fila.adicionar_reserva(reserva)
     session.commit()
     return reserva

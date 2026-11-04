@@ -350,6 +350,47 @@ Testes unitários da camada de serviço usando `FakeFilaEsperaRepository` e uma 
 29-09-2026 
 Os serviços recebem o repositório abstrato e a sessão, e fazem o commit somente no caminho feliz, deixando o endpoint Flask responsável apenas por traduzir a requisição HTTP e as exceções. A devolução e a atualização operam sobre a FilaEspera, e não sobre a Reserva isolada, pois a invariante de transferência do direito após 48 horas pertence à raiz do agregado. O relacionamento ORM ordena as reservas por data_reserva, preservando a ordem de chegada da fila ao carregar do banco.
 
+### Fase 2 — Checkpoint 2
+
+#### Implementação
+
+02 - 11 - 2026
+`14d6d57` — refactor(reservas): torna prazo de retirada configuravel (OCP)
+
+Identifiquei uma violação do Princípio Aberto/Fechado (OCP) na entidade `Reserva`: o prazo de 48 horas para retirada estava fixo dentro de `esta_expirada` desde o commit `f185330` (22/09/2026). Diante de um requisito plausível, prazos diferentes por categoria de leitor (por exemplo, 72 horas para professores), a classe precisaria ser modificada a cada novo prazo. Transformei o prazo no atributo `prazo_retirada_horas`, com padrão de 48 horas, persistido em uma nova coluna da tabela `reservas` e aceito como parâmetro opcional no serviço `reservar_livro` e no endpoint `POST /reservas`.
+
+03 - 11 - 2026
+docs(reservas): documenta refatoracao OCP no solid.md (commit que acompanha esta subseção)
+
+Documentei a violação, a refatoração, os testes e o custo em `docs/solid.md`, citando o commit "antes" (`f185330`) e o commit "depois" (`14d6d57`).
+
+#### Arquivos
+
+- `src/biblioteca/reservas/domain/model.py`
+- `src/biblioteca/reservas/adapters/orm.py`
+- `src/biblioteca/reservas/service_layer/services.py`
+- `src/biblioteca/reservas/entrypoints/flask_app.py`
+- `src/biblioteca/reservas/tests/unit/test_reserva.py`
+- `src/biblioteca/reservas/tests/unit/test_services_reservas.py`
+- `src/biblioteca/reservas/tests/integration/test_reserva_repository.py`
+- `docs/solid.md`
+
+#### Testes
+
+02 - 11 - 2026
+
+Os 16 testes existentes do módulo continuaram passando sem alteração, o que comprova que o comportamento padrão de 48 horas foi preservado. Adicionei 5 testes para o novo requisito: prazo padrão, reserva de 72 horas que não expira com 49 horas e expira com 73 horas, serviço com prazo personalizado, persistência do prazo no banco e leitura de uma reserva antiga sem prazo, que recebe o padrão de 48 horas.
+
+#### Decisão de projeto
+
+02 - 11 - 2026
+
+Optei por tornar o prazo um atributo com valor padrão, em vez de criar uma hierarquia de classes de reserva, porque a regra de expiração é a mesma e apenas o valor muda. A coluna no banco recebe o mesmo valor padrão para que as reservas já gravadas continuem válidas sem migração de dados.
+
+#### Uso de IA
+
+Utilizei o Claude (Claude Code) para analisar o código do agregado e sugerir a violação de OCP, implementar a refatoração, escrever os novos testes e redigir um rascunho de `docs/solid.md` e desta subseção. Revisei o diff, rodei a suíte de testes antes de commitar e ajustei o texto, sendo responsável pelo resultado final.
+
 ## Ana Laura
 
 ### Fase 1 — Checkpoint 1

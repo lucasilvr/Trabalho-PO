@@ -2,6 +2,7 @@ from datetime import date
 
 from biblioteca.emprestimo.adapters.repository import AbstractRepository
 from biblioteca.emprestimo.domain.model import ItemEmprestado
+from biblioteca.emprestimo.domain.politicas import politica_para
 
 
 def registrar_emprestimo(
@@ -10,12 +11,16 @@ def registrar_emprestimo(
     id_exemplar: str,
     data_emprestimo: date,
     data_prevista_devolucao: date,
+    categoria_leitor: str | None = None,
 ) -> ItemEmprestado:
+    politica_atraso = politica_para(categoria_leitor)
     item = ItemEmprestado(
         id_item=id_item,
         id_exemplar=id_exemplar,
         data_emprestimo=data_emprestimo,
         data_prevista_devolucao=data_prevista_devolucao,
+        categoria_leitor=categoria_leitor,
+        politica_atraso=politica_atraso,
     )
 
     repo.add(item)

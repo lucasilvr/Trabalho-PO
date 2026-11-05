@@ -86,6 +86,110 @@ A camada de serviço foi utilizada para orquestrar as operações entre a API, o
 
 ---
 
+### Fase 2 — Checkpoint 1
+
+#### Implementação
+
+22 - 10 - 2026
+
+Contribuí para a documentação da arquitetura do sistema Biblioteca, descrevendo os estilos arquiteturais existentes, os atributos de qualidade priorizados, os trade-offs e a comparação com uma arquitetura alternativa. Também documentei a decisão de separar o domínio da infraestrutura de persistência por meio de um ADR relacionado ao módulo Empréstimo.
+
+#### Arquivos
+
+- `docs/arquitetura.md`
+- `docs/adr/0001-separacao-dominio-persistencia.md`
+
+#### Testes
+
+22 - 10 - 2026
+
+Conferi a documentação em relação à estrutura do código existente e aos componentes de domínio, persistência, camada de serviço e API. A validação da suíte automatizada deve ser confirmada pela CI do repositório.
+
+#### Decisão de projeto
+
+22 - 10 - 2026
+
+Registrei a separação entre domínio e persistência como uma decisão arquitetural, considerando o benefício de testar as regras de negócio sem depender diretamente do SQLAlchemy e o custo de manter camadas e abstrações adicionais.
+
+#### Uso de IA
+
+Utilizei IA generativa para auxiliar na elaboração e organização de um rascunho da documentação de arquitetura e do ADR. Revisei o conteúdo em relação ao código e ao histórico do repositório, sendo responsável pelas verificações, ajustes e versão final.
+
+### Fase 2 — Checkpoint 2
+
+#### Implementação
+
+`f275b6f` — refactor(emprestimo): unifica contrato de item não encontrado
+
+Refatorei o contrato do repositório do agregado Empréstimo. Antes, `SqlAlchemyRepository.get` lançava `NoResultFound` e `FakeRepository.get` lançava `StopIteration` para o mesmo caso de item inexistente. Criei `ItemNaoEncontrado` no domínio, passei as duas implementações a levantar essa exceção e removi do entrypoint Flask o import de `NoResultFound`. No mesmo commit, documentei a violação, o código anterior, a refatoração e o custo em `docs/solid.md`.
+
+#### Arquivos
+
+- `src/biblioteca/emprestimo/domain/exceptions.py`
+- `src/biblioteca/emprestimo/adapters/repository.py`
+- `src/biblioteca/emprestimo/entrypoints/flask_app.py`
+- `src/biblioteca/emprestimo/tests/unit/test_repository_contract.py`
+- `src/biblioteca/emprestimo/tests/integration/test_emprestimo_repository.py`
+- `src/biblioteca/emprestimo/tests/e2e/test_emprestimo_api.py`
+- `docs/solid.md`
+
+#### Testes
+
+02/11/2026
+
+Mantive os testes da Fase 1 sem alteração e acrescentei testes para o contrato do repositório: o fake e o repositório SQLAlchemy devem levantar `ItemNaoEncontrado` para um item ausente. Também acrescentei um teste E2E para o endpoint de atraso com item inexistente. A suíte do Empréstimo passou com `25 passed`.
+
+#### Decisão de projeto
+
+02/11/2026
+
+Padronizei a ausência de item como uma exceção de domínio (`ItemNaoEncontrado`) em vez de deixar cada adapter expor a exceção nativa da sua tecnologia, porque o contrato do repositório precisa ser substituível sem alterar a camada HTTP.
+
+#### Uso de IA
+
+Utilizei IA generativa para analisar o código em busca de violações de SOLID, comparar alternativas de refatoração e organizar o rascunho de `docs/solid.md` e desta subseção. Conferi os trechos citados nos commits `4202941`, `719453d` e `1cd3fa3`, executei a suíte de testes e revisei o texto final; a decisão e a responsabilidade pela alteração são minhas.
+
+### Fase 2 — Checkpoint 3
+
+#### Implementação
+
+`0a79511` — feat(emprestimo): aplica Strategy na politica de atraso
+
+Implementei o padrão Strategy no agregado Empréstimo. Criei a interface `PoliticaAtraso`, as estratégias `SemTolerancia` e `ToleranciaEmDias` e passei `ItemEmprestado` a delegar a decisão de atraso para a política recebida. O serviço `registrar_emprestimo` seleciona a política pela categoria do leitor, mantendo `SemTolerancia` como padrão quando a categoria não é informada.
+
+`feat(emprestimo): expoe categoria do leitor na API e documenta Strategy` (commit que acompanha esta subseção)
+
+Expus `categoria_leitor` como campo opcional no `POST /emprestimos`, validei o tipo e passei a devolver a categoria na representação do item. Documentei o padrão em `docs/gof.md`.
+
+#### Arquivos
+
+- `src/biblioteca/emprestimo/domain/politicas.py`
+- `src/biblioteca/emprestimo/domain/model.py`
+- `src/biblioteca/emprestimo/service_layer/services.py`
+- `src/biblioteca/emprestimo/adapters/orm.py`
+- `src/biblioteca/emprestimo/entrypoints/flask_app.py`
+- `src/biblioteca/emprestimo/tests/unit/test_politica_atraso.py`
+- `src/biblioteca/emprestimo/tests/unit/test_services_emprestimo.py`
+- `src/biblioteca/emprestimo/tests/integration/test_emprestimo_orm.py`
+- `src/biblioteca/emprestimo/tests/e2e/test_emprestimo_api.py`
+- `docs/gof.md`
+
+#### Testes
+
+05/11/2026
+
+Testei a política padrão, as tolerâncias de um e de três dias, a troca de estratégia em tempo de execução, a rejeição de tolerância negativa, o item devolvido, a seleção da política pela categoria no serviço, a recarga do item a partir do banco com `expunge_all()` e o comportamento pela API HTTP, incluindo a rejeição de categoria inválida. A suíte do Empréstimo passou com `28 passed`.
+
+#### Decisão de projeto
+
+05/11/2026
+
+Mantive `SemTolerancia` como política padrão e passei a persistir `categoria_leitor`, porque a revisão mostrou que uma política apenas injetada na criação se perdia quando o item era recarregado do banco. Com a categoria persistida e `politica_atraso` como property, a entidade reencontra a estratégia correta mesmo sendo reconstruída pelo SQLAlchemy sem chamar o construtor.
+
+#### Uso de IA
+
+Utilizei IA generativa para comparar Strategy com condicionais na entidade, Template Method e Decorator, para organizar o rascunho de `docs/gof.md` e desta subseção e para revisar a implementação. A revisão apontou que a política não sobrevivia ao reload; corrigi o desenho persistindo a categoria, verifiquei o diagrama contra as classes implementadas e executei as suítes de unidade, integração e E2E. A escolha do padrão e a responsabilidade pelo resultado final são minhas.
+
 ## Karine Vitória Marinho de Moraes
 
 ### Fase 1 - Checkpoint 1

@@ -1,9 +1,9 @@
 from datetime import date
 
 from flask import Flask, jsonify, request
-from sqlalchemy.orm.exc import NoResultFound
 
 from biblioteca.emprestimo.adapters.repository import SqlAlchemyRepository
+from biblioteca.emprestimo.domain.exceptions import ItemNaoEncontrado
 from biblioteca.emprestimo.service_layer import services
 
 
@@ -26,6 +26,7 @@ def create_app(session):
                 if item.data_devolucao is not None
                 else None
             ),
+            "categoria_leitor": item.categoria_leitor,
         }
 
     @app.post("/emprestimos")
@@ -55,12 +56,18 @@ def create_app(session):
         except (TypeError, ValueError):
             return jsonify({"erro": "Data inválida"}), 400
 
+        categoria_leitor = dados.get("categoria_leitor")
+
+        if categoria_leitor is not None and not isinstance(categoria_leitor, str):
+            return jsonify({"erro": "Categoria do leitor inválida"}), 400
+
         item = services.registrar_emprestimo(
             repo=repository(),
             id_item=dados["id_item"],
             id_exemplar=dados["id_exemplar"],
             data_emprestimo=data_emprestimo,
             data_prevista_devolucao=data_prevista_devolucao,
+            categoria_leitor=categoria_leitor,
         )
 
         session.commit()
@@ -89,7 +96,7 @@ def create_app(session):
                 id_item=id_item,
                 data_devolucao=data_devolucao,
             )
-        except NoResultFound:
+        except ItemNaoEncontrado:
             return jsonify({"erro": "Item não encontrado"}), 404
 
         session.commit()
@@ -116,7 +123,7 @@ def create_app(session):
                 id_item=id_item,
                 data_referencia=data,
             )
-        except NoResultFound:
+        except ItemNaoEncontrado:
             return jsonify({"erro": "Item não encontrado"}), 404
 
         return jsonify(

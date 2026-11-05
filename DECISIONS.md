@@ -149,6 +149,47 @@ Padronizei a ausência de item como uma exceção de domínio (`ItemNaoEncontrad
 
 Utilizei IA generativa para analisar o código em busca de violações de SOLID, comparar alternativas de refatoração e organizar o rascunho de `docs/solid.md` e desta subseção. Conferi os trechos citados nos commits `4202941`, `719453d` e `1cd3fa3`, executei a suíte de testes e revisei o texto final; a decisão e a responsabilidade pela alteração são minhas.
 
+### Fase 2 — Checkpoint 3
+
+#### Implementação
+
+`0a79511` — feat(emprestimo): aplica Strategy na politica de atraso
+
+Implementei o padrão Strategy no agregado Empréstimo. Criei a interface `PoliticaAtraso`, as estratégias `SemTolerancia` e `ToleranciaEmDias` e passei `ItemEmprestado` a delegar a decisão de atraso para a política recebida. O serviço `registrar_emprestimo` seleciona a política pela categoria do leitor, mantendo `SemTolerancia` como padrão quando a categoria não é informada.
+
+`feat(emprestimo): expoe categoria do leitor na API e documenta Strategy` (commit que acompanha esta subseção)
+
+Expus `categoria_leitor` como campo opcional no `POST /emprestimos`, validei o tipo e passei a devolver a categoria na representação do item. Documentei o padrão em `docs/gof.md`.
+
+#### Arquivos
+
+- `src/biblioteca/emprestimo/domain/politicas.py`
+- `src/biblioteca/emprestimo/domain/model.py`
+- `src/biblioteca/emprestimo/service_layer/services.py`
+- `src/biblioteca/emprestimo/adapters/orm.py`
+- `src/biblioteca/emprestimo/entrypoints/flask_app.py`
+- `src/biblioteca/emprestimo/tests/unit/test_politica_atraso.py`
+- `src/biblioteca/emprestimo/tests/unit/test_services_emprestimo.py`
+- `src/biblioteca/emprestimo/tests/integration/test_emprestimo_orm.py`
+- `src/biblioteca/emprestimo/tests/e2e/test_emprestimo_api.py`
+- `docs/gof.md`
+
+#### Testes
+
+05/11/2026
+
+Testei a política padrão, as tolerâncias de um e de três dias, a troca de estratégia em tempo de execução, a rejeição de tolerância negativa, o item devolvido, a seleção da política pela categoria no serviço, a recarga do item a partir do banco com `expunge_all()` e o comportamento pela API HTTP, incluindo a rejeição de categoria inválida. A suíte do Empréstimo passou com `28 passed`.
+
+#### Decisão de projeto
+
+05/11/2026
+
+Mantive `SemTolerancia` como política padrão e passei a persistir `categoria_leitor`, porque a revisão mostrou que uma política apenas injetada na criação se perdia quando o item era recarregado do banco. Com a categoria persistida e `politica_atraso` como property, a entidade reencontra a estratégia correta mesmo sendo reconstruída pelo SQLAlchemy sem chamar o construtor.
+
+#### Uso de IA
+
+Utilizei IA generativa para comparar Strategy com condicionais na entidade, Template Method e Decorator, para organizar o rascunho de `docs/gof.md` e desta subseção e para revisar a implementação. A revisão apontou que a política não sobrevivia ao reload; corrigi o desenho persistindo a categoria, verifiquei o diagrama contra as classes implementadas e executei as suítes de unidade, integração e E2E. A escolha do padrão e a responsabilidade pelo resultado final são minhas.
+
 ## Karine Vitória Marinho de Moraes
 
 ### Fase 1 - Checkpoint 1

@@ -1,23 +1,20 @@
 from biblioteca.acervo.domain import model
 from biblioteca.acervo.adapters.repository import AbstractRepository
-
-
-def _normalizar_texto(valor: str, nome_campo: str) -> str:
-    texto = (valor or "").strip()
-    if not texto:
-        raise ValueError(f"{nome_campo} não pode ser vazio.")
-    return texto
+from biblioteca.acervo.service_layer.validators import (
+    criar_cadeia_validacao_isbn,
+    criar_cadeia_validacao_livro,
+)
 
 
 def adicionar_livro(isbn: str, titulo: str, autor: str, repo: AbstractRepository, session):
-    isbn_normalizado = _normalizar_texto(isbn, "ISBN")
-    titulo_normalizado = _normalizar_texto(titulo, "Título")
-    autor_normalizado = _normalizar_texto(autor, "Autor")
+    dados = criar_cadeia_validacao_livro().validar(
+        {"isbn": isbn, "titulo": titulo, "autor": autor}
+    )
 
     livro = model.Livro(
-        isbn=isbn_normalizado,
-        titulo=titulo_normalizado,
-        autor=autor_normalizado,
+        isbn=dados["isbn"],
+        titulo=dados["titulo"],
+        autor=dados["autor"],
     )
     repo.add(livro)
     session.commit()
@@ -29,10 +26,10 @@ def listar_livros(repo: AbstractRepository):
 
 
 def inativar_livro(isbn: str, repo: AbstractRepository, session):
-    isbn_normalizado = _normalizar_texto(isbn, "ISBN")
-    livro = repo.get(isbn_normalizado)
+    dados = criar_cadeia_validacao_isbn().validar({"isbn": isbn})
+    livro = repo.get(dados["isbn"])
     if not livro:
-        raise ValueError(f"Livro com ISBN {isbn_normalizado} não encontrado.")
+        raise ValueError(f"Livro com ISBN {dados['isbn']} não encontrado.")
 
     livro.inativar()
     session.commit()

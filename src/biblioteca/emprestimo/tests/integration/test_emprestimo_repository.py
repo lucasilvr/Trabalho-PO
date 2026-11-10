@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 
 from biblioteca.emprestimo.adapters import orm
 from biblioteca.emprestimo.adapters.repository import SqlAlchemyRepository
+from biblioteca.emprestimo.domain.exceptions import ItemNaoEncontrado
 from biblioteca.emprestimo.domain.model import ItemEmprestado
 
 
@@ -44,6 +45,15 @@ def test_sqlalchemy_repository_adiciona_e_busca_item(session):
     assert resultado.data_emprestimo == date(2026, 9, 3)
     assert resultado.data_prevista_devolucao == date(2026, 9, 12)
     assert resultado.data_devolucao is None
+
+
+def test_sqlalchemy_repository_levanta_item_nao_encontrado(session):
+    repo = SqlAlchemyRepository(session)
+
+    with pytest.raises(ItemNaoEncontrado) as excinfo:
+        repo.get("ITEM-999")
+
+    assert excinfo.value.id_item == "ITEM-999"
 
 
 def test_sqlalchemy_repository_lista_itens(session):

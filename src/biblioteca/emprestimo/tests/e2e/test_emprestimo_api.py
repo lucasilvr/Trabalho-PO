@@ -112,3 +112,14 @@ def test_api_retorna_404_para_item_inexistente(client):
     )
 
     assert response.status_code == 404
+
+
+def test_api_retorna_404_para_atraso_de_item_inexistente(client):
+    response = client.get(
+        "/emprestimos/ITEM-999/atraso",
+        query_string={
+            "data_referencia": "2026-09-12",
+        },
+    )
+
+    assert response.status_code == 404

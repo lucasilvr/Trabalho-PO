@@ -86,6 +86,69 @@ A camada de serviço foi utilizada para orquestrar as operações entre a API, o
 
 ---
 
+### Fase 2 — Checkpoint 1
+
+#### Implementação
+
+22 - 10 - 2026
+
+Contribuí para a documentação da arquitetura do sistema Biblioteca, descrevendo os estilos arquiteturais existentes, os atributos de qualidade priorizados, os trade-offs e a comparação com uma arquitetura alternativa. Também documentei a decisão de separar o domínio da infraestrutura de persistência por meio de um ADR relacionado ao módulo Empréstimo.
+
+#### Arquivos
+
+- `docs/arquitetura.md`
+- `docs/adr/0001-separacao-dominio-persistencia.md`
+
+#### Testes
+
+22 - 10 - 2026
+
+Conferi a documentação em relação à estrutura do código existente e aos componentes de domínio, persistência, camada de serviço e API. A validação da suíte automatizada deve ser confirmada pela CI do repositório.
+
+#### Decisão de projeto
+
+22 - 10 - 2026
+
+Registrei a separação entre domínio e persistência como uma decisão arquitetural, considerando o benefício de testar as regras de negócio sem depender diretamente do SQLAlchemy e o custo de manter camadas e abstrações adicionais.
+
+#### Uso de IA
+
+Utilizei IA generativa para auxiliar na elaboração e organização de um rascunho da documentação de arquitetura e do ADR. Revisei o conteúdo em relação ao código e ao histórico do repositório, sendo responsável pelas verificações, ajustes e versão final.
+
+### Fase 2 — Checkpoint 2
+
+#### Implementação
+
+`f275b6f` — refactor(emprestimo): unifica contrato de item não encontrado
+
+Refatorei o contrato do repositório do agregado Empréstimo. Antes, `SqlAlchemyRepository.get` lançava `NoResultFound` e `FakeRepository.get` lançava `StopIteration` para o mesmo caso de item inexistente. Criei `ItemNaoEncontrado` no domínio, passei as duas implementações a levantar essa exceção e removi do entrypoint Flask o import de `NoResultFound`. No mesmo commit, documentei a violação, o código anterior, a refatoração e o custo em `docs/solid.md`.
+
+#### Arquivos
+
+- `src/biblioteca/emprestimo/domain/exceptions.py`
+- `src/biblioteca/emprestimo/adapters/repository.py`
+- `src/biblioteca/emprestimo/entrypoints/flask_app.py`
+- `src/biblioteca/emprestimo/tests/unit/test_repository_contract.py`
+- `src/biblioteca/emprestimo/tests/integration/test_emprestimo_repository.py`
+- `src/biblioteca/emprestimo/tests/e2e/test_emprestimo_api.py`
+- `docs/solid.md`
+
+#### Testes
+
+02/11/2026
+
+Mantive os testes da Fase 1 sem alteração e acrescentei testes para o contrato do repositório: o fake e o repositório SQLAlchemy devem levantar `ItemNaoEncontrado` para um item ausente. Também acrescentei um teste E2E para o endpoint de atraso com item inexistente. A suíte do Empréstimo passou com `25 passed`.
+
+#### Decisão de projeto
+
+02/11/2026
+
+Padronizei a ausência de item como uma exceção de domínio (`ItemNaoEncontrado`) em vez de deixar cada adapter expor a exceção nativa da sua tecnologia, porque o contrato do repositório precisa ser substituível sem alterar a camada HTTP.
+
+#### Uso de IA
+
+Utilizei IA generativa para analisar o código em busca de violações de SOLID, comparar alternativas de refatoração e organizar o rascunho de `docs/solid.md` e desta subseção. Conferi os trechos citados nos commits `4202941`, `719453d` e `1cd3fa3`, executei a suíte de testes e revisei o texto final; a decisão e a responsabilidade pela alteração são minhas.
+
 ## Karine Vitória Marinho de Moraes
 
 ### Fase 1 - Checkpoint 1
@@ -209,6 +272,29 @@ Foram criados testes End-to-End simulando um cliente real com a biblioteca `requ
 #### Decisão de projeto
 O uso de injeção de dependências no `services.py` permitiu desacoplar completamente o framework web (Flask) das regras do banco de dados e do domínio. O arquivo `.db` foi adicionado ao `.gitignore` para garantir que o banco de persistência local não interfira no repositório compartilhado do grupo.
 
+### Fase 2 — Checkpoint 1
+
+#### Implementação
+
+Documentei uma decisão arquitetural relacionada ao módulo de Penalidades, considerando a separação entre a API, a camada de serviço e as operações do domínio. O ADR apresenta o contexto da decisão, as alternativas consideradas e suas consequências para a organização e manutenção do módulo.
+
+#### Arquivos
+
+- docs/adr/0003-api-flask-multas.md
+
+#### Testes
+
+Conferi a decisão documentada em relação à implementação existente do módulo de Penalidades e às verificações automatizadas do projeto.
+
+#### Decisão de projeto
+
+
+A decisão documentada busca manter as responsabilidades da interface HTTP separadas da orquestração dos casos de uso e das regras de negócio do módulo de Penalidades.
+
+#### Uso de IA
+
+Se eu utilizar o rascunho produzido com auxílio de IA generativa, declararei esse uso e revisarei o conteúdo em relação ao código real de Penalidades, assumindo a responsabilidade pela versão final.
+
 ---
 
 ## João Vicente Piller Menezes
@@ -286,6 +372,93 @@ Testes unitários da camada de serviço usando `FakeFilaEsperaRepository` e uma 
 #### Decisão de projeto
 29-09-2026 
 Os serviços recebem o repositório abstrato e a sessão, e fazem o commit somente no caminho feliz, deixando o endpoint Flask responsável apenas por traduzir a requisição HTTP e as exceções. A devolução e a atualização operam sobre a FilaEspera, e não sobre a Reserva isolada, pois a invariante de transferência do direito após 48 horas pertence à raiz do agregado. O relacionamento ORM ordena as reservas por data_reserva, preservando a ordem de chegada da fila ao carregar do banco.
+
+### Fase 2 — Checkpoint 2
+
+#### Implementação
+
+02 - 11 - 2026
+`14d6d57` — refactor(reservas): torna prazo de retirada configuravel (OCP)
+
+Identifiquei uma violação do Princípio Aberto/Fechado (OCP) na entidade `Reserva`: o prazo de 48 horas para retirada estava fixo dentro de `esta_expirada` desde o commit `f185330` (22/09/2026). Diante de um requisito plausível, prazos diferentes por categoria de leitor (por exemplo, 72 horas para professores), a classe precisaria ser modificada a cada novo prazo. Transformei o prazo no atributo `prazo_retirada_horas`, com padrão de 48 horas, persistido em uma nova coluna da tabela `reservas` e aceito como parâmetro opcional no serviço `reservar_livro` e no endpoint `POST /reservas`.
+
+03 - 11 - 2026
+docs(reservas): documenta refatoracao OCP no solid.md (commit que acompanha esta subseção)
+
+Documentei a violação, a refatoração, os testes e o custo em `docs/solid.md`, citando o commit "antes" (`f185330`) e o commit "depois" (`14d6d57`).
+
+#### Arquivos
+
+- `src/biblioteca/reservas/domain/model.py`
+- `src/biblioteca/reservas/adapters/orm.py`
+- `src/biblioteca/reservas/service_layer/services.py`
+- `src/biblioteca/reservas/entrypoints/flask_app.py`
+- `src/biblioteca/reservas/tests/unit/test_reserva.py`
+- `src/biblioteca/reservas/tests/unit/test_services_reservas.py`
+- `src/biblioteca/reservas/tests/integration/test_reserva_repository.py`
+- `docs/solid.md`
+
+#### Testes
+
+02 - 11 - 2026
+
+Os 16 testes existentes do módulo continuaram passando sem alteração, o que comprova que o comportamento padrão de 48 horas foi preservado. Adicionei 5 testes para o novo requisito: prazo padrão, reserva de 72 horas que não expira com 49 horas e expira com 73 horas, serviço com prazo personalizado, persistência do prazo no banco e leitura de uma reserva antiga sem prazo, que recebe o padrão de 48 horas.
+
+#### Decisão de projeto
+
+02 - 11 - 2026
+
+Optei por tornar o prazo um atributo com valor padrão, em vez de criar uma hierarquia de classes de reserva, porque a regra de expiração é a mesma e apenas o valor muda. A coluna no banco recebe o mesmo valor padrão para que as reservas já gravadas continuem válidas sem migração de dados.
+
+#### Uso de IA
+
+Utilizei o Claude (Claude Code) para analisar o código do agregado e sugerir a violação de OCP, implementar a refatoração, escrever os novos testes e redigir um rascunho de `docs/solid.md` e desta subseção. Revisei o diff, rodei a suíte de testes antes de commitar e ajustei o texto, sendo responsável pelo resultado final.
+
+### Fase 2 — Checkpoint 3
+
+#### Implementação
+
+06 - 11 - 2026
+`014bb5c` — feat(reservas): adiciona estados da reserva para o padrao State
+
+Criei as classes do padrão State no domínio de reservas: a interface `EstadoReserva`, que por padrão recusa todas as transições com `TransicaoInvalida`, e os estados concretos `ReservaPendente`, `ReservaDisponivel` e `ReservaExpirada`, além do dicionário `ESTADOS_RESERVA`, que liga o `status` persistido ao objeto de estado.
+
+08 - 11 - 2026
+`00a795e` — feat(reservas): aplica padrao State no ciclo de vida da Reserva
+
+Fiz a `Reserva` delegar `disponibilizar`, `expirar` e `esta_expirada` ao estado atual, eliminando as condicionais com strings. Com isso, transições que antes passavam em silêncio passaram a ser recusadas: uma reserva expirada não volta a ficar disponível, uma reserva disponível não tem o prazo reiniciado e uma reserva pendente não expira sem ter ficado disponível.
+
+09 - 11 - 2026
+`5dae3d8` — docs(reservas): documenta padrao State no gof.md
+
+Documentei o padrão em `docs/gof.md`, com o problema, as alternativas consideradas, os participantes, o diagrama de classes em Mermaid, os testes e o custo.
+
+#### Arquivos
+
+- `src/biblioteca/reservas/domain/model.py`
+- `src/biblioteca/reservas/tests/unit/test_estado_reserva.py`
+- `src/biblioteca/reservas/tests/unit/test_reserva.py`
+- `docs/gof.md`
+
+#### Testes
+
+06 - 11 - 2026
+
+Seis testes unitários em `test_estado_reserva.py` exercitam cada estado isoladamente, incluindo a correspondência entre os nomes dos estados e os valores de `status` gravados no banco.
+
+08 - 11 - 2026
+
+Quatro testes em `test_reserva.py` verificam as transições pela `Reserva`. Rodei esses quatro testes contra o código anterior ao padrão e todos falharam, confirmando que os problemas existiam. Os testes que já existiam no módulo continuaram passando sem alteração.
+
+#### Decisão de projeto
+
+08 - 11 - 2026
+
+Mantive o `status` como texto na tabela `reservas` e fiz a `Reserva` encontrar o estado pelo dicionário `ESTADOS_RESERVA`, em vez de mapear os objetos de estado no ORM. Assim o banco e o mapeamento não mudaram, e uma reserva carregada do banco volta automaticamente ao estado correto.
+
+#### Uso de IA
+
+Utilizei o Claude (Claude Code) para escrever os testes e redigir os rascunhos de `docs/gof.md` (incluindo o diagrama Mermaid) e desta subseção. Revisei o código e os textos, rodei a suíte de testes antes de cada commit e sou responsável pelo resultado final.
 
 ## Ana Laura
 
@@ -382,6 +555,33 @@ Consertei o `FakeMultaRepository`, construí o service para orquestrar a baixa d
 #### Decisão de projeto
 
 29 - 09 - 2026 Deixei o service apenas orquestrando chamadas entre API e repositório. Toda a regra de validação do valor continuou presa com segurança na entidade `Multa`.
+
+---
+
+### Fase 2 — Checkpoint 1
+
+#### Implementação
+
+22 - 10 - 2026
+
+Documentei uma decisão arquitetural relacionada ao módulo Acervo, considerando a representação de livros e exemplares e a separação entre domínio e persistência. O ADR registra o contexto da decisão, as alternativas consideradas e suas consequências para a manutenção e evolução do módulo.
+
+#### Arquivos
+
+- `docs/adr/0002-modelagem-livro-exemplar.md`
+
+#### Testes
+
+22 - 10 - 2026
+
+Conferi a decisão documentada em relação à implementação existente do Acervo e às verificações automatizadas do projeto.
+
+#### Decisão de projeto
+
+22 - 10 - 2026
+
+A decisão documentada considera como a organização das entidades Livro e Exemplar representa o domínio e como a separação das responsabilidades afeta a manutenção e a evolução do Acervo.
+
 
 ## Isabella Vieira da Motta
 

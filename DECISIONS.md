@@ -272,6 +272,29 @@ Foram criados testes End-to-End simulando um cliente real com a biblioteca `requ
 #### Decisão de projeto
 O uso de injeção de dependências no `services.py` permitiu desacoplar completamente o framework web (Flask) das regras do banco de dados e do domínio. O arquivo `.db` foi adicionado ao `.gitignore` para garantir que o banco de persistência local não interfira no repositório compartilhado do grupo.
 
+### Fase 2 — Checkpoint 1
+
+#### Implementação
+
+Documentei uma decisão arquitetural relacionada ao módulo de Penalidades, considerando a separação entre a API, a camada de serviço e as operações do domínio. O ADR apresenta o contexto da decisão, as alternativas consideradas e suas consequências para a organização e manutenção do módulo.
+
+#### Arquivos
+
+- docs/adr/0003-api-flask-multas.md
+
+#### Testes
+
+Conferi a decisão documentada em relação à implementação existente do módulo de Penalidades e às verificações automatizadas do projeto.
+
+#### Decisão de projeto
+
+
+A decisão documentada busca manter as responsabilidades da interface HTTP separadas da orquestração dos casos de uso e das regras de negócio do módulo de Penalidades.
+
+#### Uso de IA
+
+Se eu utilizar o rascunho produzido com auxílio de IA generativa, declararei esse uso e revisarei o conteúdo em relação ao código real de Penalidades, assumindo a responsabilidade pela versão final.
+
 ---
 
 ## João Vicente Piller Menezes
@@ -532,6 +555,33 @@ Consertei o `FakeMultaRepository`, construí o service para orquestrar a baixa d
 #### Decisão de projeto
 
 29 - 09 - 2026 Deixei o service apenas orquestrando chamadas entre API e repositório. Toda a regra de validação do valor continuou presa com segurança na entidade `Multa`.
+
+---
+
+### Fase 2 — Checkpoint 1
+
+#### Implementação
+
+22 - 10 - 2026
+
+Documentei uma decisão arquitetural relacionada ao módulo Acervo, considerando a representação de livros e exemplares e a separação entre domínio e persistência. O ADR registra o contexto da decisão, as alternativas consideradas e suas consequências para a manutenção e evolução do módulo.
+
+#### Arquivos
+
+- `docs/adr/0002-modelagem-livro-exemplar.md`
+
+#### Testes
+
+22 - 10 - 2026
+
+Conferi a decisão documentada em relação à implementação existente do Acervo e às verificações automatizadas do projeto.
+
+#### Decisão de projeto
+
+22 - 10 - 2026
+
+A decisão documentada considera como a organização das entidades Livro e Exemplar representa o domínio e como a separação das responsabilidades afeta a manutenção e a evolução do Acervo.
+
 
 ## Isabella Vieira da Motta
 

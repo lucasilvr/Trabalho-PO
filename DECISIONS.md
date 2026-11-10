@@ -448,3 +448,14 @@ Foram adicionados testes End-to-End (E2E) simulando requisições HTTP diretas a
 #### Decisão de projeto
 28-09-2026 
 A camada de serviço foi utilizada para orquestrar as validações e a injeção do repositório, garantindo que o endpoint Flask apenas lide com tráfego web e não contenha regras de negócio.
+
+### Fase 2 — Checkpoint 3 (GoF)
+
+#### Implementação
+10-11-2026
+`7db3bf2` — feat(leitores): implementa padrao GoF State para o status do leitor
+Implementei o padrão comportamental *State* para gerir o ciclo de vida do Leitor, substituindo as condicionais de status (`ativo`/`inativo`) por delegação polimórfica.
+
+#### Decisão de projeto e Uso de IA
+10-11-2026
+Decidi adotar o padrão *State* em vez do *Strategy* porque a capacidade de fazer empréstimos dita o comportamento intrínseco e mutável da entidade ao longo do seu ciclo de vida.

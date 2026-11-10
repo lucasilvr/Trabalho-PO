@@ -328,6 +328,52 @@ Optei por tornar o prazo um atributo com valor padrão, em vez de criar uma hier
 
 Utilizei o Claude (Claude Code) para analisar o código do agregado e sugerir a violação de OCP, implementar a refatoração, escrever os novos testes e redigir um rascunho de `docs/solid.md` e desta subseção. Revisei o diff, rodei a suíte de testes antes de commitar e ajustei o texto, sendo responsável pelo resultado final.
 
+### Fase 2 — Checkpoint 3
+
+#### Implementação
+
+06 - 11 - 2026
+`014bb5c` — feat(reservas): adiciona estados da reserva para o padrao State
+
+Criei as classes do padrão State no domínio de reservas: a interface `EstadoReserva`, que por padrão recusa todas as transições com `TransicaoInvalida`, e os estados concretos `ReservaPendente`, `ReservaDisponivel` e `ReservaExpirada`, além do dicionário `ESTADOS_RESERVA`, que liga o `status` persistido ao objeto de estado.
+
+08 - 11 - 2026
+`00a795e` — feat(reservas): aplica padrao State no ciclo de vida da Reserva
+
+Fiz a `Reserva` delegar `disponibilizar`, `expirar` e `esta_expirada` ao estado atual, eliminando as condicionais com strings. Com isso, transições que antes passavam em silêncio passaram a ser recusadas: uma reserva expirada não volta a ficar disponível, uma reserva disponível não tem o prazo reiniciado e uma reserva pendente não expira sem ter ficado disponível.
+
+09 - 11 - 2026
+`5dae3d8` — docs(reservas): documenta padrao State no gof.md
+
+Documentei o padrão em `docs/gof.md`, com o problema, as alternativas consideradas, os participantes, o diagrama de classes em Mermaid, os testes e o custo.
+
+#### Arquivos
+
+- `src/biblioteca/reservas/domain/model.py`
+- `src/biblioteca/reservas/tests/unit/test_estado_reserva.py`
+- `src/biblioteca/reservas/tests/unit/test_reserva.py`
+- `docs/gof.md`
+
+#### Testes
+
+06 - 11 - 2026
+
+Seis testes unitários em `test_estado_reserva.py` exercitam cada estado isoladamente, incluindo a correspondência entre os nomes dos estados e os valores de `status` gravados no banco.
+
+08 - 11 - 2026
+
+Quatro testes em `test_reserva.py` verificam as transições pela `Reserva`. Rodei esses quatro testes contra o código anterior ao padrão e todos falharam, confirmando que os problemas existiam. Os testes que já existiam no módulo continuaram passando sem alteração.
+
+#### Decisão de projeto
+
+08 - 11 - 2026
+
+Mantive o `status` como texto na tabela `reservas` e fiz a `Reserva` encontrar o estado pelo dicionário `ESTADOS_RESERVA`, em vez de mapear os objetos de estado no ORM. Assim o banco e o mapeamento não mudaram, e uma reserva carregada do banco volta automaticamente ao estado correto.
+
+#### Uso de IA
+
+Utilizei o Claude (Claude Code) para escrever os testes e redigir os rascunhos de `docs/gof.md` (incluindo o diagrama Mermaid) e desta subseção. Revisei o código e os textos, rodei a suíte de testes antes de cada commit e sou responsável pelo resultado final.
+
 ## Ana Laura
 
 ### Fase 1 — Checkpoint 1

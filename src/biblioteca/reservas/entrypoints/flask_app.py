@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask import Flask, jsonify, request
 from biblioteca.reservas.adapters.repository import SqlAlchemyFilaEsperaRepository
+from biblioteca.reservas.domain.model import PRAZO_RETIRADA_PADRAO_HORAS
 from biblioteca.reservas.service_layer import services
 
 def create_app(session):
@@ -17,6 +18,7 @@ def create_app(session):
                 datetime.fromisoformat(request.json["data_reserva"]),
                 repo,
                 session,
+                request.json.get("prazo_retirada_horas", PRAZO_RETIRADA_PADRAO_HORAS),
             )
         except KeyError:
             return jsonify({"message": "Dados incompletos"}), 400

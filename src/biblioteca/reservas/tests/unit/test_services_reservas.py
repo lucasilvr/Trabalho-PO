@@ -66,3 +66,12 @@ def test_registrar_devolucao_de_livro_sem_fila_lanca_erro():
 
     with pytest.raises(services.FilaNaoEncontrada, match="LIVRO-999"):
         services.registrar_devolucao("LIVRO-999", datetime(2026, 9, 24, 10, 0), repo, FakeSession())
+
+def test_reservar_livro_com_prazo_de_retirada_personalizado():
+    repo = FakeFilaEsperaRepository([])
+
+    reserva = services.reservar_livro(
+        "RES-01", "LEITOR-1", "LIVRO-1", datetime(2026, 9, 22, 10, 0), repo, FakeSession(), prazo_retirada_horas=72
+    )
+
+    assert reserva.prazo_retirada_horas == 72

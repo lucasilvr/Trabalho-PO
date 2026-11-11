@@ -310,7 +310,7 @@ Como a abstração `AbstractMultaRepository.get` não definia uma pós-condiçã
 
 ### Refatoração
 
-Commit "depois": `c7a192b` — os arquivos alterados foram:
+Commit "depois": `0452ae0`, `a3fafad`, `6f219b0`, `9be867e`, `a705916`, `1f18f9e` — os arquivos alterados foram:
 
 - `src/biblioteca/multas/domain/exceptions.py` (novo): define `MultaNaoEncontrada` e `ValorPagamentoInvalido`, exceções puras de domínio.
 - `src/biblioteca/multas/domain/model.py`: adiciona validação no `__post_init__` do Value Object `Pagamento` para impedir valores zerados ou negativos.
@@ -343,7 +343,7 @@ class FakeMultaRepository(AbstractMultaRepository):
 
 ### Como os testes garantiram o comportamento
 
-- **Preservação da suíte existente:** Os testes da Fase 1 (`test_multas.py`, `test_services.py` e `test_api_multas.py`) continuaram passando sem quebras.
+- **Preservação da suíte existente:** Os testes da Fase 1 (`test_multas.py`, `test_services.py` e `test_multas_api.py`) continuaram passando sem quebras.
 - **Novos testes unitários:** Foram adicionados testes em `test_multas.py` para garantir que instanciar um `Pagamento` com valor menor ou igual a zero dispara `ValorPagamentoInvalido`.
 - **Validação de contrato dos repositórios:** Foi adicionado teste unitário garantindo que tanto `SqlAlchemyMultaRepository` quanto `FakeMultaRepository` disparam exatamente a exceção `MultaNaoEncontrada` quando consultados por um ID inexistente.
 - **Teste E2E de contrato HTTP:** O teste da API confirmou que requisições de pagamento para multas inexistentes retornam status `404 Not Found` de maneira consistente.

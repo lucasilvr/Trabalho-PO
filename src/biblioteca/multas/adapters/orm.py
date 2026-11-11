@@ -24,8 +24,9 @@ pagamentos = Table(
 )
 
 def start_mappers():
-    mapper_registry.map_imperatively(
-        model.Multa, multas,
-        properties={'pagamentos': relationship(model.Pagamento, backref='multa', collection_class=list)}
-    )
-    mapper_registry.map_imperatively(model.Pagamento, pagamentos)
+    if not mapper_registry.mappers:
+        mapper_registry.map_imperatively(
+            model.Multa, multas,
+            properties={'pagamentos': relationship(model.Pagamento, backref='multa', collection_class=list)}
+        )
+        mapper_registry.map_imperatively(model.Pagamento, pagamentos)

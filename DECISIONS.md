@@ -582,6 +582,42 @@ Conferi a decisão documentada em relação à implementação existente do Acer
 
 A decisão documentada considera como a organização das entidades Livro e Exemplar representa o domínio e como a separação das responsabilidades afeta a manutenção e a evolução do Acervo.
 
+### Fase 2 — Checkpoint 2
+
+#### Implementação
+
+03 - 11 - 2026
+
+`c7a192b` — refactor(multas): padroniza contrato de erro do repositorio e excecoes de dominio
+
+Refatorei a gestão de erros do módulo de Multas. Criei as exceções puras de domínio `MultaNaoEncontrada` e `ValorPagamentoInvalido`, padronizando os repositórios (SQLAlchemy e Fake) para que ambos respeitem a mesma pós-condição (LSP). Ajustei o endpoint Flask para capturar exceções do domínio sem importar bibliotecas do ORM (DIP). Documentei as alterações em `docs/solid.md`.
+
+#### Arquivos
+
+- `src/biblioteca/multas/domain/exceptions.py`
+- `src/biblioteca/multas/domain/model.py`
+- `src/biblioteca/multas/adapters/repository.py`
+- `src/biblioteca/multas/service_layer/services.py`
+- `src/biblioteca/multas/entrypoints/flask_app.py`
+- `src/biblioteca/multas/tests/unit/test_multas.py`
+- `docs/solid.md`
+
+#### Testes
+
+03 - 11 - 2026
+
+Mantive os testes da Fase 1 ativos e adicionei validações unitárias para valores de pagamento inválidos e exceções do repositório.
+
+#### Decisão de projeto
+
+03 - 11 - 2026
+
+Padronizei o retorno de buscas ausentes como exceção de domínio em vez de retornar `None` ou exceção nativa do banco de dados, protegendo os consumidores do repositório.
+
+#### Uso de IA
+
+Utilizei IA generativa para identificar pontos de violação de LSP/DIP no contrato do repositório e formatar os relatórios no `solid.md`. Testei o código com pytest.
+
 
 ## Isabella Vieira da Motta
 

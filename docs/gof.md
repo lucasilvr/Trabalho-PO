@@ -178,57 +178,26 @@ passaram a ser recusadas pelo domínio, protegendo a invariante de transferênci
 direito na fila. Além disso, um estado novo (por exemplo, "Retirada", quando o leitor
 busca o exemplar) entra como uma nova classe, sem modificar os estados existentes.
 
-## Isabella Vieira da Motta — Leitores
-
-### Padrão e categoria
-
-**State** — padrão comportamental.
-
-### Contexto no sistema e problema
-
-A entidade `Leitor` gerencia o status do usuário através de um atributo booleano simples: `ativo`. O método `pode_fazer_emprestimo()` utilizava verificações condicionais baseadas nesse atributo para determinar se o fluxo de empréstimo poderia prosseguir. 
-
-Conforme novas regras e status surgissem no futuro (por exemplo, um leitor "Suspenso" por infrações ou "Com Pendências" financeiras/multas), esse método precisaria de diversas verificações condicionais aninhadas (`if/elif`), aumentando a complexidade, diminuindo a legibilidade e dificultando a manutenção da regra de negócio central da entidade.
-
-### Por que State
-
-O padrão State permite que a entidade mude o seu comportamento interno quando o seu estado muda. Ao encapsular o comportamento de cada estado em classes distintas, evitamos o uso excessivo de condicionais.
-
-Alternativas consideradas:
-- **Strategy:** Pensei em usar o padrão *Strategy* para definir a lógica de empréstimo, mas a permissão para realizar empréstimos está estritamente vinculada ao ciclo de vida e estado interno da entidade (ativo ou inativo). O *State* modela melhor essa transição orgânica do domínio.
-
-### Participantes mapeados para o código
-
-| Participante GoF | Classe no sistema |
-|---|---|
-| State | `EstadoLeitor` |
-| ConcreteState | `LeitorAtivo` |
-| ConcreteState | `LeitorInativo` |
-| Context | `Leitor` |
-
-* **Context (`Leitor`):** Mantém uma referência para a instância do estado atual (`_estado`) e delega as decisões de negócio para ele.
-* **State (`EstadoLeitor`):** Define a interface (abstrata) que os estados concretos devem implementar.
-* **Concrete States (`LeitorAtivo`, `LeitorInativo`):** Implementam as regras específicas de cada estado (ex: apenas o leitor ativo verifica o limite numérico da categoria).
-
-### Diagrama de classes
-
+## Isabella Vieira da Motta - Padrão Observer (Comportamental)
+* **Agregado:** Leitores
+* **Contexto e Problema:** Quando um leitor é inativado, vários efeitos colaterais podem ser necessários no futuro (ex: enviar email ao utilizador, gerar log de auditoria, cancelar reservas pendentes automaticamente). Acoplar estas chamadas diretamente no método `inativar()` da entidade violaria o SRP (Princípio de Responsabilidade Única) e o OCP.
+* **Solução:** Implementação do padrão *Observer*. A entidade `Leitor` funciona como *Subject/Observable*. Sistemas interessados nesses efeitos colaterais implementam a interface `LeitorObserver` e são notificados no momento da inativação.
+* **Participantes:** `Leitor` (Subject), `LeitorObserver` (Observer Abstrato).
+* **Custo/Benefício:** O custo é gerir a lista em memória (evitando que o SQLAlchemy tente persistir a lista de observers no banco de dados, resolvido via `@property`). O benefício é manter a entidade de domínio limpa e extensível sem alteração de código.
+* **Diagrama de Classes:**
 ```mermaid
 classDiagram
     class Leitor {
-        -EstadoLeitor _estado
-        +pode_fazer_emprestimo() bool
+        -List~LeitorObserver~ _observers
+        +adicionar_observer(LeitorObserver)
         +inativar()
     }
-    class EstadoLeitor {
+    class LeitorObserver {
         <<abstract>>
-        +pode_fazer_emprestimo(leitor) bool
+        +leitor_inativado(Leitor)
     }
-    class LeitorAtivo {
-        +pode_fazer_emprestimo(leitor) bool
+    class MockEmailObserver {
+        +leitor_inativado(Leitor)
     }
-    class LeitorInativo {
-        +pode_fazer_emprestimo(leitor) bool
-    }
-    Leitor --> EstadoLeitor
-    EstadoLeitor <|-- LeitorAtivo
-    EstadoLeitor <|-- LeitorInativo
+    Leitor --> LeitorObserver : notifica
+    LeitorObserver <|-- MockEmailObserver

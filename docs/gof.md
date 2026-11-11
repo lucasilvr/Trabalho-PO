@@ -291,6 +291,31 @@ passaram a ser recusadas pelo domínio, protegendo a invariante de transferênci
 direito na fila. Além disso, um estado novo (por exemplo, "Retirada", quando o leitor
 busca o exemplar) entra como uma nova classe, sem modificar os estados existentes.
 
+## Isabella Vieira da Motta - Padrão Observer (Comportamental)
+* **Agregado:** Leitores
+* **Contexto e Problema:** Quando um leitor é inativado, vários efeitos colaterais podem ser necessários no futuro (ex: enviar email ao utilizador, gerar log de auditoria, cancelar reservas pendentes automaticamente). Acoplar estas chamadas diretamente no método `inativar()` da entidade violaria o SRP (Princípio de Responsabilidade Única) e o OCP.
+* **Solução:** Implementação do padrão *Observer*. A entidade `Leitor` funciona como *Subject/Observable*. Sistemas interessados nesses efeitos colaterais implementam a interface `LeitorObserver` e são notificados no momento da inativação.
+* **Participantes:** `Leitor` (Subject), `LeitorObserver` (Observer Abstrato).
+* **Custo/Benefício:** O custo é gerir a lista em memória (evitando que o SQLAlchemy tente persistir a lista de observers no banco de dados, resolvido via `@property`). O benefício é manter a entidade de domínio limpa e extensível sem alteração de código.
+* **Diagrama de Classes:**
+```mermaid
+classDiagram
+    class Leitor {
+        -List~LeitorObserver~ _observers
+        +adicionar_observer(LeitorObserver)
+        +inativar()
+    }
+    class LeitorObserver {
+        <<abstract>>
+        +leitor_inativado(Leitor)
+    }
+    class MockEmailObserver {
+        +leitor_inativado(Leitor)
+    }
+    Leitor --> LeitorObserver : notifica
+    LeitorObserver <|-- MockEmailObserver
+```
+
 # Padrões GoF - Fase 2
 
 ## Ana Laura Neuhaus Vega — Multas

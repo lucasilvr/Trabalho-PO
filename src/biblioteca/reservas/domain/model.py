@@ -2,6 +2,46 @@ from datetime import datetime, timedelta
 
 PRAZO_RETIRADA_PADRAO_HORAS = 48
 
+class TransicaoInvalida(Exception):
+    pass
+
+class EstadoReserva:
+    nome = ""
+
+    def disponibilizar(self, reserva, data_hora: datetime) -> None:
+        raise TransicaoInvalida(f"Reserva {reserva.id_reserva} com status {self.nome} nao pode ser disponibilizada")
+
+    def expirar(self, reserva) -> None:
+        raise TransicaoInvalida(f"Reserva {reserva.id_reserva} com status {self.nome} nao pode expirar")
+
+    def esta_expirada(self, reserva, data_hora_atual: datetime) -> bool:
+        return False
+
+class ReservaPendente(EstadoReserva):
+    nome = "Pendente"
+
+    def disponibilizar(self, reserva, data_hora: datetime) -> None:
+        reserva.status = ReservaDisponivel.nome
+        reserva.data_disponibilizacao = data_hora
+
+class ReservaDisponivel(EstadoReserva):
+    nome = "Disponivel"
+
+    def esta_expirada(self, reserva, data_hora_atual: datetime) -> bool:
+        return (data_hora_atual - reserva.data_disponibilizacao) > timedelta(hours=reserva.prazo_retirada_horas)
+
+    def expirar(self, reserva) -> None:
+        reserva.status = ReservaExpirada.nome
+
+class ReservaExpirada(EstadoReserva):
+    nome = "Expirada"
+
+ESTADOS_RESERVA = {
+    ReservaPendente.nome: ReservaPendente(),
+    ReservaDisponivel.nome: ReservaDisponivel(),
+    ReservaExpirada.nome: ReservaExpirada(),
+}
+
 class Reserva:
     def __init__(
         self,
@@ -15,21 +55,22 @@ class Reserva:
         self.id_leitor = id_leitor
         self.id_livro = id_livro
         self.data_reserva = data_reserva
-        self.status = "Pendente"
+        self.status = ReservaPendente.nome
         self.data_disponibilizacao: datetime | None = None
         self.prazo_retirada_horas = prazo_retirada_horas
 
+    @property
+    def estado(self) -> EstadoReserva:
+        return ESTADOS_RESERVA[self.status]
+
     def disponibilizar(self, data_hora: datetime) -> None:
-        self.status = "Disponivel"
-        self.data_disponibilizacao = data_hora
+        self.estado.disponibilizar(self, data_hora)
 
     def esta_expirada(self, data_hora_atual: datetime) -> bool:
-        if self.status == "Disponivel" and self.data_disponibilizacao is not None:
-            return (data_hora_atual - self.data_disponibilizacao) > timedelta(hours=self.prazo_retirada_horas)
-        return False
+        return self.estado.esta_expirada(self, data_hora_atual)
 
     def expirar(self) -> None:
-        self.status = "Expirada"
+        self.estado.expirar(self)
 
     def __eq__(self, other):
         if not isinstance(other, Reserva):
@@ -56,7 +97,7 @@ class FilaEspera:
         self.reservas.append(reserva)
 
     def exemplar_devolvido(self, data_hora: datetime) -> None:
-        pendentes = [r for r in self.reservas if r.status == "Pendente"]
+        pendentes = [r for r in self.reservas if r.status == ReservaPendente.nome]
         if pendentes:
             pendentes[0].disponibilizar(data_hora)
 

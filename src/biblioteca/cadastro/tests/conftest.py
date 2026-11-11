@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import clear_mappers
 from sqlalchemy.orm import sessionmaker
 from biblioteca.cadastro.adapters.orm import metadata, start_mappers
+from biblioteca.cadastro.adapters import orm
 
 @pytest.fixture
 def in_memory_db():

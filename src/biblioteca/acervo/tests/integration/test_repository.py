@@ -9,6 +9,7 @@ from biblioteca.acervo.adapters import repository
 def session():
     engine = create_engine("sqlite:///:memory:")
     orm.metadata.create_all(engine)
+    clear_mappers()
     orm.start_mappers()
     yield sessionmaker(bind=engine)()
     clear_mappers()

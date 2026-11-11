@@ -313,6 +313,29 @@ Foram criados testes End-to-End simulando um cliente real com a biblioteca `requ
 #### Decisão de projeto
 O uso de injeção de dependências no `services.py` permitiu desacoplar completamente o framework web (Flask) das regras do banco de dados e do domínio. O arquivo `.db` foi adicionado ao `.gitignore` para garantir que o banco de persistência local não interfira no repositório compartilhado do grupo.
 
+### Fase 2 — Checkpoint 1
+
+#### Implementação
+
+Documentei uma decisão arquitetural relacionada ao módulo de Penalidades, considerando a separação entre a API, a camada de serviço e as operações do domínio. O ADR apresenta o contexto da decisão, as alternativas consideradas e suas consequências para a organização e manutenção do módulo.
+
+#### Arquivos
+
+- docs/adr/0003-api-flask-multas.md
+
+#### Testes
+
+Conferi a decisão documentada em relação à implementação existente do módulo de Penalidades e às verificações automatizadas do projeto.
+
+#### Decisão de projeto
+
+
+A decisão documentada busca manter as responsabilidades da interface HTTP separadas da orquestração dos casos de uso e das regras de negócio do módulo de Penalidades.
+
+#### Uso de IA
+
+Se eu utilizar o rascunho produzido com auxílio de IA generativa, declararei esse uso e revisarei o conteúdo em relação ao código real de Penalidades, assumindo a responsabilidade pela versão final.
+
 ---
 
 ## João Vicente Piller Menezes
@@ -432,6 +455,52 @@ Optei por tornar o prazo um atributo com valor padrão, em vez de criar uma hier
 
 Utilizei o Claude (Claude Code) para analisar o código do agregado e sugerir a violação de OCP, implementar a refatoração, escrever os novos testes e redigir um rascunho de `docs/solid.md` e desta subseção. Revisei o diff, rodei a suíte de testes antes de commitar e ajustei o texto, sendo responsável pelo resultado final.
 
+### Fase 2 — Checkpoint 3
+
+#### Implementação
+
+06 - 11 - 2026
+`014bb5c` — feat(reservas): adiciona estados da reserva para o padrao State
+
+Criei as classes do padrão State no domínio de reservas: a interface `EstadoReserva`, que por padrão recusa todas as transições com `TransicaoInvalida`, e os estados concretos `ReservaPendente`, `ReservaDisponivel` e `ReservaExpirada`, além do dicionário `ESTADOS_RESERVA`, que liga o `status` persistido ao objeto de estado.
+
+08 - 11 - 2026
+`00a795e` — feat(reservas): aplica padrao State no ciclo de vida da Reserva
+
+Fiz a `Reserva` delegar `disponibilizar`, `expirar` e `esta_expirada` ao estado atual, eliminando as condicionais com strings. Com isso, transições que antes passavam em silêncio passaram a ser recusadas: uma reserva expirada não volta a ficar disponível, uma reserva disponível não tem o prazo reiniciado e uma reserva pendente não expira sem ter ficado disponível.
+
+09 - 11 - 2026
+`5dae3d8` — docs(reservas): documenta padrao State no gof.md
+
+Documentei o padrão em `docs/gof.md`, com o problema, as alternativas consideradas, os participantes, o diagrama de classes em Mermaid, os testes e o custo.
+
+#### Arquivos
+
+- `src/biblioteca/reservas/domain/model.py`
+- `src/biblioteca/reservas/tests/unit/test_estado_reserva.py`
+- `src/biblioteca/reservas/tests/unit/test_reserva.py`
+- `docs/gof.md`
+
+#### Testes
+
+06 - 11 - 2026
+
+Seis testes unitários em `test_estado_reserva.py` exercitam cada estado isoladamente, incluindo a correspondência entre os nomes dos estados e os valores de `status` gravados no banco.
+
+08 - 11 - 2026
+
+Quatro testes em `test_reserva.py` verificam as transições pela `Reserva`. Rodei esses quatro testes contra o código anterior ao padrão e todos falharam, confirmando que os problemas existiam. Os testes que já existiam no módulo continuaram passando sem alteração.
+
+#### Decisão de projeto
+
+08 - 11 - 2026
+
+Mantive o `status` como texto na tabela `reservas` e fiz a `Reserva` encontrar o estado pelo dicionário `ESTADOS_RESERVA`, em vez de mapear os objetos de estado no ORM. Assim o banco e o mapeamento não mudaram, e uma reserva carregada do banco volta automaticamente ao estado correto.
+
+#### Uso de IA
+
+Utilizei o Claude (Claude Code) para escrever os testes e redigir os rascunhos de `docs/gof.md` (incluindo o diagrama Mermaid) e desta subseção. Revisei o código e os textos, rodei a suíte de testes antes de cada commit e sou responsável pelo resultado final.
+
 ## Ana Laura
 
 ### Fase 1 — Checkpoint 1
@@ -528,6 +597,128 @@ Consertei o `FakeMultaRepository`, construí o service para orquestrar a baixa d
 
 29 - 09 - 2026 Deixei o service apenas orquestrando chamadas entre API e repositório. Toda a regra de validação do valor continuou presa com segurança na entidade `Multa`.
 
+---
+
+### Fase 2 — Checkpoint 1
+
+#### Implementação
+
+22 - 10 - 2026
+
+Documentei uma decisão arquitetural relacionada ao módulo Acervo, considerando a representação de livros e exemplares e a separação entre domínio e persistência. O ADR registra o contexto da decisão, as alternativas consideradas e suas consequências para a manutenção e evolução do módulo.
+
+#### Arquivos
+
+- `docs/adr/0002-modelagem-livro-exemplar.md`
+
+#### Testes
+
+22 - 10 - 2026
+
+Conferi a decisão documentada em relação à implementação existente do Acervo e às verificações automatizadas do projeto.
+
+#### Decisão de projeto
+
+22 - 10 - 2026
+
+A decisão documentada considera como a organização das entidades Livro e Exemplar representa o domínio e como a separação das responsabilidades afeta a manutenção e a evolução do Acervo.
+
+---
+
+### Fase 2 — Checkpoint 2
+
+#### Implementação
+
+10 - 11 - 2026
+`0452ae0` — feat(multas): adicao de excecoes de dominio
+Criei o módulo `exceptions.py` contendo as exceções puras de domínio para isolar falhas de entidade ausente e dados inválidos de pagamento.
+
+10 - 11 - 2026
+`a3fafad` — refactor(multas): adiciona validacao do valor
+Adicionei a validação no `__post_init__` do Value Object `Pagamento` para impedir a instanciação com valores nulos ou negativos.
+
+10 - 11 - 2026
+`6f219b0` — refactor(multas): padronizacao do repository.py
+Refatorei o `SqlAlchemyMultaRepository` e o `FakeMultaRepository` para responderem com o mesmo contrato de erro (`MultaNaoEncontrada`), corrigindo a violação de LSP.
+
+10 - 11 - 2026
+`9be867e` — refactor(multas): service_layer simplificado devido a mudanca no repository
+Simplifiquei a camada de serviço `pagar_multa`, removendo a verificação procedural `if multa is None`.
+
+10 - 11 - 2026
+`a705916` — refactor(multas): atualizacao do endpoint pra tratar excecoes de dominio
+Atualizei o endpoint HTTP para capturar `MultaNaoEncontrada` (HTTP 404) e `ValorPagamentoInvalido` (HTTP 400), eliminando dependências diretas de exceções do ORM (DIP).
+
+10 - 11 - 2026
+`1f18f9e` — docs(multas): documentacao da refatoracao solid adicionada
+Documentei as violações de LSP e DIP, a solução aplicada, os testes de regressão e o custo da refatoração no arquivo `docs/solid.md`.
+
+#### Arquivos
+
+- `src/biblioteca/multas/domain/exceptions.py`
+- `src/biblioteca/multas/domain/model.py`
+- `src/biblioteca/multas/adapters/repository.py`
+- `src/biblioteca/multas/service_layer/services.py`
+- `src/biblioteca/multas/entrypoints/flask_app.py`
+- `src/biblioteca/multas/tests/unit/test_multas.py`
+- `docs/solid.md`
+
+#### Testes
+
+10 - 11 - 2026
+
+Adicionei testes unitários para a validação de `Pagamento` e para a garantia de contrato de exceção em ambos os repositórios, além de manter os testes E2E da API verificando o retorno de HTTP 404 para multas inexistentes.
+
+#### Decisão de projeto
+
+10 - 11 - 2026
+
+Padronizei a ausência de registros como exceção explícita de domínio em vez de retornar `None` ou vazar exceções do banco de dados, protegendo a camada de apresentação e unificando o contrato entre as implementações do repositório.
+
+#### Uso de IA
+
+Utilizei IA generativa para identificar pontos de violação de LSP/DIP no contrato do repositório e formatar o texto do `docs/solid.md`. Testei todas as alterações com pytest.
+
+---
+
+### Fase 2 — Checkpoint 3
+
+#### Implementação
+
+10 - 11 - 2026
+`1fece2f` — feat(multas): implementacao do Decorator no calculo de acrescimos de multa
+Implementei a interface `CalculoMulta`, o componente `CalculoMultaBase` e os decoradores `DecoradorJurosMora` e `DecoradorTaxaAdministrativa` no modelo de domínio, permitindo acréscimos dinâmicos sem alterar `Multa`.
+
+10 - 11 - 2026
+`c5ffd3c` — test(multas): adiciona testes unitarios para decoradores de juros e taxa adm
+Criei os testes unitários exercitando o cálculo isolado do decorador de juros de mora e a composição encadeada com a taxa administrativa.
+
+11 - 11 - 2026
+`6873f1c` — docs(multas): documenta padrao decorator no gof.md
+Documentei a aplicação do padrão estrutural Decorator no arquivo `docs/gof.md`, incluindo diagrama Mermaid, justificativa, alternativas e participantes.
+
+#### Arquivos
+
+- `src/biblioteca/multas/domain/model.py`
+- `src/biblioteca/multas/tests/unit/test_multas.py`
+- `docs/gof.md`
+
+#### Testes
+
+10 - 11 - 2026
+
+Implementei testes unitários cobrindo tanto o uso isolado de `DecoradorJurosMora` quanto o aninhamento flexível de `DecoradorTaxaAdministrativa` sobre `DecoradorJurosMora`.
+
+#### Decisão de projeto
+
+10 - 11 - 2026
+
+Optei pelo padrão Decorator para permitir a composição cumulativa e dinâmica de encargos (juros e taxas) sobre a multa em tempo de execução, evitando a explosão de subclasses e mantendo o modelo alinhado aos princípios SRP e OCP.
+
+#### Uso de IA
+
+Utilizei IA generativa para gerar a sintaxe do diagrama de classes em Mermaid e estruturar o texto no `docs/gof.md`. Testei o código e validei os cenários com pytest.
+
 ## Isabella Vieira da Motta
 
 ### Fase 1 — Checkpoint 1
@@ -593,3 +784,12 @@ Foram adicionados testes End-to-End (E2E) simulando requisições HTTP diretas a
 #### Decisão de projeto
 28-09-2026 
 A camada de serviço foi utilizada para orquestrar as validações e a injeção do repositório, garantindo que o endpoint Flask apenas lide com tráfego web e não contenha regras de negócio.
+
+### Fase 2 — Checkpoint 3 (GoF)
+
+### Fase 2 — Checkpoint 3 (GoF)
+
+#### Implementação
+10-11-2026
+feat(leitores): substitui padrao State por Observer
+Implementei o padrão comportamental *Observer* para permitir que efeitos colaterais (como envio de emails ou logs) reajam à inativação de um leitor, sem acoplar a entidade principal a serviços externos.

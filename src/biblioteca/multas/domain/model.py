@@ -1,11 +1,16 @@
 from dataclasses import dataclass
 from datetime import date
 from typing import List
+from biblioteca.multas.domain.exceptions import ValorPagamentoInvalido
 
 @dataclass
 class Pagamento:
     valor: float
     data: date
+
+    def __post_init__(self):
+        if self.valor <= 0:
+            raise ValorPagamentoInvalido(self.valor)
 
 class Multa:
     def __init__(self, id_multa: str, id_leitor: str, dias_atraso: int, taxa_por_dia: float):

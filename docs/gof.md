@@ -5,6 +5,7 @@
 ### Padrão e categoria
 
 **Chain of Responsibility** (Cadeia de Responsabilidade)
+
 ### Contexto e problema
 
 O caso de uso de cadastro precisa validar ISBN, título e autor antes de criar e
@@ -73,6 +74,7 @@ instâncias de `ValidadorCampoLivro` configuradas para cada campo; não são sub
 
 `src/biblioteca/acervo/tests/unit/test_validators.py` verifica que a cadeia normaliza
 os três campos e que cada campo vazio interrompe a validação com erro.
+
 ## Padrões GoF
 
 ### Isabella Vieira da Motta - Padrão State (Comportamental)
@@ -107,6 +109,8 @@ classDiagram
     Leitor --> EstadoLeitor
     EstadoLeitor <|-- LeitorAtivo
     EstadoLeitor <|-- LeitorInativo
+```
+
 # Padrões GoF — Fase 2
 
 ## João Vicente Piller Menezes — Reserva
@@ -286,3 +290,96 @@ O custo compensa porque as transições inválidas, que antes passavam em silên
 passaram a ser recusadas pelo domínio, protegendo a invariante de transferência do
 direito na fila. Além disso, um estado novo (por exemplo, "Retirada", quando o leitor
 busca o exemplar) entra como uma nova classe, sem modificar os estados existentes.
+
+# Padrões GoF - Fase 2
+
+## Ana Laura Neuhaus Vega — Multas
+
+### Padrão e categoria
+
+**Decorator** — padrão estrutural.
+
+### Contexto no sistema e problema
+
+No módulo de Multas, o valor total de uma penalidade é calculado inicialmente a partir dos dias de atraso e da taxa diária. Contudo, dependendo do contexto de cobrança, acréscimos dinâmicos e opcionais podem incidir sobre a multa base — como juros de mora por atrasos prolongados e taxa administrativa fixa de cobrança.
+
+Antes da aplicação do padrão, tentar combinar esses acréscimos dinâmicos gerava rigidez na entidade `Multa`.
+
+### Por que Decorator
+
+O padrão Decorator permite adicionar novas responsabilidades a um objeto dinamicamente encadeando decoradores, sem alterar o código do objeto base nem a estrutura do modelo.
+
+**Alternativas consideradas:**
+1. **Herança múltipla / Subclasses concretas:** Criar subclasses como `MultaComJuros`, `MultaComTaxaAdministrativa` e `MultaComJurosETaxa`. Essa abordagem geraria uma explosão combinatória de subclasses a cada nova taxa ou acréscimo criado.
+2. **Flags booleanas na entidade `Multa`:** Adicionar parâmetros como `possui_juros: bool` e `possui_taxa: bool` no construtor. Isso violaria o Single Responsibility Principle (SRP) e o Open/Closed Principle (OCP), enchendo o modelo de blocos condicionais `if/else`.
+
+### Participantes mapeados para o código
+
+| Participante GoF | Classe no sistema |
+|---|---|
+| Component | `CalculoMulta` |
+| ConcreteComponent | `CalculoMultaBase` |
+| Decorator | `DecoradorMulta` |
+| ConcreteDecorator | `DecoradorJurosMora` |
+| ConcreteDecorator | `DecoradorTaxaAdministrativa` |
+| Context / Client | `Multa` |
+
+### Diagrama de classes
+
+```mermaid
+classDiagram
+    class CalculoMulta {
+        <<Component>>
+        +calcular(dias_atraso, taxa_por_dia) float
+    }
+
+    class CalculoMultaBase {
+        <<ConcreteComponent>>
+        +calcular(dias_atraso, taxa_por_dia) float
+    }
+
+    class DecoradorMulta {
+        <<Decorator>>
+        #calculo: CalculoMulta
+        +calcular(dias_atraso, taxa_por_dia) float
+    }
+
+    class DecoradorJurosMora {
+        <<ConcreteDecorator>>
+        +calcular(dias_atraso, taxa_por_dia) float
+    }
+
+    class DecoradorTaxaAdministrativa {
+        <<ConcreteDecorator>>
+        +calcular(dias_atraso, taxa_por_dia) float
+    }
+
+    class Multa {
+        <<Context>>
+        +id_multa: str
+        +valor_total: float
+        +calculo: CalculoMulta
+        +registrar_pagamento(pagamento)
+    }
+
+    CalculoMulta <|-- CalculoMultaBase
+    CalculoMulta <|-- DecoradorMulta
+    DecoradorMulta o--> CalculoMulta : encapsula
+    DecoradorMulta <|-- DecoradorJurosMora
+    DecoradorMulta <|-- DecoradorTaxaAdministrativa
+    Multa o--> CalculoMulta : utiliza
+```
+
+### Testes que exercitam o padrão
+
+- **`test_decorador_juros_mora_aplica_10_porcento_apos_5_dias`:** Exercita o encadeamento simples do `DecoradorJurosMora` sobre a implementação base `CalculoMultaBase`, garantindo a aplicação isolada dos juros de mora sobre atrasos maiores que 5 dias.
+- **`test_decoradores_aninhados_juros_e_taxa_administrativa`:** Valida a composição encadeada (*wrapper*) do padrão ao instanciar o `DecoradorTaxaAdministrativa` envolvendo o `DecoradorJurosMora`. O teste assegura que os juros são calculados primeiramente sobre a tarifa base e a taxa fixa de R$ 5,00 é somada ao montante final corretamente.
+
+### Custo da aplicação do padrão
+
+- **Complexidade estrutural:** Introduz uma interface abstrata (`CalculoMulta`), uma classe abstrata decoradora (`DecoradorMulta`) e classes concretas para cada acréscimo financeiro, aumentando o número total de arquivos e classes no módulo.
+- **Indireção em tempo de execução:** Cada camada decoradora adiciona uma chamada de método extra na pilha de execução (*delegation stack*) ao calcular o valor total da multa.
+- **Instanciação na aplicação:** A montagem dos decoradores requer cuidado na camada de criação/serviço para definir a ordem adequada de empilhamento das taxas.
+
+**Por que compensa:**
+O custo compensa amplamente porque separa as regras de encargo financeiro da classe de domínio `Multa`. Permite criar e combinar novos tipos de acréscimos (ex.: multas por reincidência ou descontos pontuais) sem alterar nenhuma linha do código-fonte da entidade `Multa`, mantendo o domínio aderente aos princípios SOLID (SRP e OCP) e sem exigir alterações de schema no banco de dados.

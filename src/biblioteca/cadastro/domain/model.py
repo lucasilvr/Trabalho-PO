@@ -45,3 +45,15 @@ class Leitor:
         self.ativo = False
         for obs in self.observers:
             obs.leitor_inativado(self)
+
+class FabricaCategoriaLeitor:
+    @staticmethod
+    def criar(tipo_categoria: str) -> CategoriaLeitor:
+        tipo = tipo_categoria.strip().lower()
+        if tipo == "aluno":
+            return CategoriaLeitor(nome="Aluno", limite_emprestimos=3)
+        elif tipo == "professor":
+            return CategoriaLeitor(nome="Professor", limite_emprestimos=5)
+        
+        # Caso padrão se a categoria não for reconhecida
+        return CategoriaLeitor(nome=tipo_categoria, limite_emprestimos=1)

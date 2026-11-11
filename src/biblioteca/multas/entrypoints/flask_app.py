@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from biblioteca.multas.service_layer import services
 from biblioteca.multas.adapters import orm, repository
+from biblioteca.multas.domain.exceptions import MultaNaoEncontrada, ValorPagamentoInvalido
 
 app = Flask(__name__)
 orm.start_mappers()
@@ -20,5 +21,7 @@ def endpoint_pagar_multa(id_multa):
     try:
         services.pagar_multa(id_multa, data['valor'], date.fromisoformat(data['data']), repo, session)
         return jsonify({"message": "Pagamento efetuado!"}), 200
-    except ValueError as e:
+    except MultaNaoEncontrada as e:
+        return jsonify({"message": str(e)}), 404
+    except (ValorPagamentoInvalido, ValueError, KeyError) as e:
         return jsonify({"message": str(e)}), 400

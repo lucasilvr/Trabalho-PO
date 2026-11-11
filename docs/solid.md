@@ -273,3 +273,84 @@ O custo compensa porque o contrato passa a ser explícito e substituível: qualq
 implementação de repositório agora tem o mesmo comportamento observável, e a camada
 HTTP não conhece SQLAlchemy. Isso torna o teste E2E possível com o fake, reduz o
 acoplamento do entrypoint e elimina uma causa concreta de 500 em vez de 404.
+
+## Ana Laura Neuhaus Vega — Multas
+
+### Princípios violados
+
+- **Liskov Substitution Principle (LSP):** `SqlAlchemyMultaRepository` e `FakeMultaRepository` implementavam a abstração `AbstractMultaRepository`, mas reagiam de formas diferentes quando uma multa não era encontrada. O repositório real retornava `None` (ou deixava vazar `NoResultFound` do SQLAlchemy), enquanto a verificação de ausência ficava solta.
+- **Dependency Inversion Principle (DIP):** o caso de uso na camada de serviço (`pagar_multa`) e a API Flask (`flask_app.py`) dependiam de exceções genéricas (`ValueError`), fazendo com que o tratamento de erro da camada de aplicação e de apresentação dependesse de validações procedurais em vez de exceções de domínio explícitas.
+
+### Código antes
+
+Comportamento introduzido nos commits `2392022` (repositório, 28/09/2026) e `b9de837` (API Flask, 29/09/2026), ambos anteriores a 06/10/2026:
+
+```python
+# src/biblioteca/multas/adapters/repository.py (antes)
+class SqlAlchemyMultaRepository(AbstractMultaRepository):
+    def get(self, id_multa: str) -> model.Multa:
+        return self.session.query(model.Multa).filter_by(id_multa=id_multa).first()
+
+# src/biblioteca/multas/service_layer/services.py (antes)
+def pagar_multa(id_multa: str, valor: float, data_pgto: date, repo: AbstractMultaRepository, session):
+    multa = repo.get(id_multa)
+    if multa is None:
+        raise ValueError(f"Multa {id_multa} não encontrada.")
+    
+    multa.registrar_pagamento(model.Pagamento(valor=valor, data=data_pgto))
+    session.commit()
+```
+
+### Problema concreto
+
+Como a abstração `AbstractMultaRepository.get` não definia uma pós-condição clara para o caso de um objeto ausente, cada repositório lidava com a busca à sua maneira. Isso gerava dois problemas práticos:
+
+1. **Violação de LSP:** Se alterássemos a implementação do repositório no teste ou na API, a forma de sinalizar ausência do registro não era garantida por contrato. A verificação de retorno `None` ficava sob responsabilidade manual da camada de serviço, misturando orquestração com validação de contrato de persistência.
+2. **Violação de DIP:** Ao tratar a ausência com `ValueError` genérico, a API Flask não conseguia diferenciar com clareza uma falha de entidade ausente (HTTP 404) de uma falha de parâmetro de requisição malformado (HTTP 400). Além disso, a camada web dependia de condicionais na camada de serviço em vez de tratar exceções puras da camada de domínio.
+
+### Refatoração
+
+Commit "depois": `0452ae0`, `a3fafad`, `6f219b0`, `9be867e`, `a705916`, `1f18f9e` — os arquivos alterados foram:
+
+- `src/biblioteca/multas/domain/exceptions.py` (novo): define `MultaNaoEncontrada` e `ValorPagamentoInvalido`, exceções puras de domínio.
+- `src/biblioteca/multas/domain/model.py`: adiciona validação no `__post_init__` do Value Object `Pagamento` para impedir valores zerados ou negativos.
+- `src/biblioteca/multas/adapters/repository.py`: `AbstractMultaRepository.get` documenta que deve lançar `MultaNaoEncontrada`. `SqlAlchemyMultaRepository` traduz `NoResultFound` para `MultaNaoEncontrada`, e `FakeMultaRepository` passa a lançar a mesma exceção.
+- `src/biblioteca/multas/service_layer/services.py`: simplifica a orquestração removendo o `if multa is None`, confiando na garantia do contrato do repositório.
+- `src/biblioteca/multas/entrypoints/flask_app.py`: passa a capturar `MultaNaoEncontrada` (retornando HTTP 404) e `ValorPagamentoInvalido` (retornando HTTP 400).
+
+```python
+# src/biblioteca/multas/domain/exceptions.py (depois)
+class MultaNaoEncontrada(Exception):
+    def __init__(self, id_multa: str):
+        self.id_multa = id_multa
+        super().__init__(f"Multa {id_multa} não encontrada.")
+
+# src/biblioteca/multas/adapters/repository.py (depois)
+class SqlAlchemyMultaRepository(AbstractMultaRepository):
+    def get(self, id_multa: str) -> model.Multa:
+        try:
+            return self.session.query(model.Multa).filter_by(id_multa=id_multa).one()
+        except NoResultFound as exc:
+            raise MultaNaoEncontrada(id_multa) from exc
+
+class FakeMultaRepository(AbstractMultaRepository):
+    def get(self, id_multa: str) -> model.Multa:
+        for m in self._multas:
+            if m.id_multa == id_multa:
+                return m
+        raise MultaNaoEncontrada(id_multa)
+```
+
+### Como os testes garantiram o comportamento
+
+- **Preservação da suíte existente:** Os testes da Fase 1 (`test_multas.py`, `test_services.py` e `test_multas_api.py`) continuaram passando sem quebras.
+- **Novos testes unitários:** Foram adicionados testes em `test_multas.py` para garantir que instanciar um `Pagamento` com valor menor ou igual a zero dispara `ValorPagamentoInvalido`.
+- **Validação de contrato dos repositórios:** Foi adicionado teste unitário garantindo que tanto `SqlAlchemyMultaRepository` quanto `FakeMultaRepository` disparam exatamente a exceção `MultaNaoEncontrada` quando consultados por um ID inexistente.
+- **Teste E2E de contrato HTTP:** O teste da API confirmou que requisições de pagamento para multas inexistentes retornam status `404 Not Found` de maneira consistente.
+
+### Custo da refatoração
+
+- Adição de um arquivo de exceções (`domain/exceptions.py`) e blocos `try/except` de tradução nos adapters de repositório e no entrypoint Flask.
+- Há um nível a mais de indireção ao transformar exceções do banco em exceções de domínio.
+
+O custo compensa porque unifica o contrato entre os repositórios real e *fake* (atendendo ao LSP), desacopla a API Flask de erros genéricos ou de infraestrutura (atendendo ao DIP) e torna as respostas da API previsíveis e alinhadas ao padrão de erros adotado pelos demais agregados da biblioteca.

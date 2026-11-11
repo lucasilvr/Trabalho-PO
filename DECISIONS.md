@@ -582,6 +582,101 @@ Conferi a decisão documentada em relação à implementação existente do Acer
 
 A decisão documentada considera como a organização das entidades Livro e Exemplar representa o domínio e como a separação das responsabilidades afeta a manutenção e a evolução do Acervo.
 
+---
+
+### Fase 2 — Checkpoint 2
+
+#### Implementação
+
+10 - 11 - 2026
+`0452ae0` — feat(multas): adicao de excecoes de dominio
+Criei o módulo `exceptions.py` contendo as exceções puras de domínio para isolar falhas de entidade ausente e dados inválidos de pagamento.
+
+10 - 11 - 2026
+`a3fafad` — refactor(multas): adiciona validacao do valor
+Adicionei a validação no `__post_init__` do Value Object `Pagamento` para impedir a instanciação com valores nulos ou negativos.
+
+10 - 11 - 2026
+`6f219b0` — refactor(multas): padronizacao do repository.py
+Refatorei o `SqlAlchemyMultaRepository` e o `FakeMultaRepository` para responderem com o mesmo contrato de erro (`MultaNaoEncontrada`), corrigindo a violação de LSP.
+
+10 - 11 - 2026
+`9be867e` — refactor(multas): service_layer simplificado devido a mudanca no repository
+Simplifiquei a camada de serviço `pagar_multa`, removendo a verificação procedural `if multa is None`.
+
+10 - 11 - 2026
+`a705916` — refactor(multas): atualizacao do endpoint pra tratar excecoes de dominio
+Atualizei o endpoint HTTP para capturar `MultaNaoEncontrada` (HTTP 404) e `ValorPagamentoInvalido` (HTTP 400), eliminando dependências diretas de exceções do ORM (DIP).
+
+10 - 11 - 2026
+`1f18f9e` — docs(multas): documentacao da refatoracao solid adicionada
+Documentei as violações de LSP e DIP, a solução aplicada, os testes de regressão e o custo da refatoração no arquivo `docs/solid.md`.
+
+#### Arquivos
+
+- `src/biblioteca/multas/domain/exceptions.py`
+- `src/biblioteca/multas/domain/model.py`
+- `src/biblioteca/multas/adapters/repository.py`
+- `src/biblioteca/multas/service_layer/services.py`
+- `src/biblioteca/multas/entrypoints/flask_app.py`
+- `src/biblioteca/multas/tests/unit/test_multas.py`
+- `docs/solid.md`
+
+#### Testes
+
+10 - 11 - 2026
+
+Adicionei testes unitários para a validação de `Pagamento` e para a garantia de contrato de exceção em ambos os repositórios, além de manter os testes E2E da API verificando o retorno de HTTP 404 para multas inexistentes.
+
+#### Decisão de projeto
+
+10 - 11 - 2026
+
+Padronizei a ausência de registros como exceção explícita de domínio em vez de retornar `None` ou vazar exceções do banco de dados, protegendo a camada de apresentação e unificando o contrato entre as implementações do repositório.
+
+#### Uso de IA
+
+Utilizei IA generativa para identificar pontos de violação de LSP/DIP no contrato do repositório e formatar o texto do `docs/solid.md`. Testei todas as alterações com pytest.
+
+---
+
+### Fase 2 — Checkpoint 3
+
+#### Implementação
+
+10 - 11 - 2026
+`1fece2f` — feat(multas): implementacao do Decorator no calculo de acrescimos de multa
+Implementei a interface `CalculoMulta`, o componente `CalculoMultaBase` e os decoradores `DecoradorJurosMora` e `DecoradorTaxaAdministrativa` no modelo de domínio, permitindo acréscimos dinâmicos sem alterar `Multa`.
+
+10 - 11 - 2026
+`c5ffd3c` — test(multas): adiciona testes unitarios para decoradores de juros e taxa adm
+Criei os testes unitários exercitando o cálculo isolado do decorador de juros de mora e a composição encadeada com a taxa administrativa.
+
+11 - 11 - 2026
+`6873f1c` — docs(multas): documenta padrao decorator no gof.md
+Documentei a aplicação do padrão estrutural Decorator no arquivo `docs/gof.md`, incluindo diagrama Mermaid, justificativa, alternativas e participantes.
+
+#### Arquivos
+
+- `src/biblioteca/multas/domain/model.py`
+- `src/biblioteca/multas/tests/unit/test_multas.py`
+- `docs/gof.md`
+
+#### Testes
+
+10 - 11 - 2026
+
+Implementei testes unitários cobrindo tanto o uso isolado de `DecoradorJurosMora` quanto o aninhamento flexível de `DecoradorTaxaAdministrativa` sobre `DecoradorJurosMora`.
+
+#### Decisão de projeto
+
+10 - 11 - 2026
+
+Optei pelo padrão Decorator para permitir a composição cumulativa e dinâmica de encargos (juros e taxas) sobre a multa em tempo de execução, evitando a explosão de subclasses e mantendo o modelo alinhado aos princípios SRP e OCP.
+
+#### Uso de IA
+
+Utilizei IA generativa para gerar a sintaxe do diagrama de classes em Mermaid e estruturar o texto no `docs/gof.md`. Testei o código e validei os cenários com pytest.
 
 ## Isabella Vieira da Motta
 

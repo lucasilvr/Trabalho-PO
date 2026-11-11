@@ -2,6 +2,7 @@ from datetime import date
 
 from biblioteca.emprestimo.adapters.repository import FakeRepository
 from biblioteca.emprestimo.domain.model import ItemEmprestado
+from biblioteca.emprestimo.domain.politicas import ToleranciaEmDias
 from biblioteca.emprestimo.service_layer import services
 
 
@@ -23,6 +24,38 @@ def test_registrar_emprestimo_adiciona_item_ao_repositorio():
     assert resultado.data_emprestimo == date(2026, 9, 28)
     assert resultado.data_prevista_devolucao == date(2026, 10, 5)
     assert resultado.data_devolucao is None
+
+
+def test_registrar_emprestimo_seleciona_politica_pela_categoria_do_leitor():
+    repo = FakeRepository([])
+
+    item = services.registrar_emprestimo(
+        repo=repo,
+        id_item="ITEM-015",
+        id_exemplar="EX-015",
+        data_emprestimo=date(2026, 9, 1),
+        data_prevista_devolucao=date(2026, 9, 10),
+        categoria_leitor="Aluno",
+    )
+
+    assert item.categoria_leitor == "Aluno"
+    assert isinstance(item.politica_atraso, ToleranciaEmDias)
+    assert item.esta_atrasado(date(2026, 9, 11)) is False
+    assert item.esta_atrasado(date(2026, 9, 12)) is True
+
+
+def test_registrar_emprestimo_sem_categoria_usa_politica_sem_tolerancia():
+    repo = FakeRepository([])
+
+    item = services.registrar_emprestimo(
+        repo=repo,
+        id_item="ITEM-016",
+        id_exemplar="EX-016",
+        data_emprestimo=date(2026, 9, 1),
+        data_prevista_devolucao=date(2026, 9, 10),
+    )
+
+    assert item.esta_atrasado(date(2026, 9, 11)) is True
 
 
 def test_registrar_devolucao_atualiza_item():

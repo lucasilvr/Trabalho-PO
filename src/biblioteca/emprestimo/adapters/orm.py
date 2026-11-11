@@ -16,6 +16,7 @@ itens_emprestados = Table(
     Column("data_emprestimo", Date, nullable=False),
     Column("data_prevista_devolucao", Date, nullable=False),
     Column("data_devolucao", Date, nullable=True),
+    Column("categoria_leitor", String(50), nullable=True),
 )
 
 

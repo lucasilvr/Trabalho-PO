@@ -1,61 +1,21 @@
 import abc
 import uuid
 import datetime
-from dataclasses import dataclass
-from typing import List
-
-@dataclass
-class Exemplar:
-    id_exemplar: str
-    status: str = "disponivel"
-
-class Livro:
-    def __init__(self, isbn: str, titulo: str, autor: str):
-        self.isbn = isbn
-        self.titulo = titulo
-        self.autor = autor
-        self.exemplares: List[Exemplar] = []
-        self.ativo = True
-
-    def adicionar_exemplar(self, exemplar: Exemplar):
-        self.exemplares.append(exemplar)
-
-    def inativar(self):
-        for exemplar in self.exemplares:
-            if exemplar.status == "emprestado":
-                raise Exception("O livro não pode ser inativado")
-        self.ativo = False
 
 class CategoriaLeitor:
     def __init__(self, nome: str, limite_emprestimos: int):
         self.nome = nome
         self.limite_emprestimos = limite_emprestimos
 
-    
     def __composite_values__(self):
         return self.nome, self.limite_emprestimos
 
-class FabricaCategoriaLeitor:
-    @staticmethod
-    def criar(tipo: str) -> CategoriaLeitor:
-        limites = {"Aluno": 3, "Professor": 5}
-        if tipo not in limites:
-            raise ValueError(f"Categoria {tipo} não permitida.")
-        return CategoriaLeitor(nome=tipo, limite_emprestimos=limites[tipo])
 
-class EstadoLeitor(abc.ABC):
+class LeitorObserver(abc.ABC):
     @abc.abstractmethod
-    def pode_fazer_emprestimo(self, leitor) -> bool:
+    def leitor_inativado(self, leitor):
         pass
 
-class LeitorAtivo(EstadoLeitor):
-    def pode_fazer_emprestimo(self, leitor) -> bool:
-        return leitor.emprestimos_ativos < leitor.categoria.limite_emprestimos
-
-
-class LeitorInativo(EstadoLeitor):
-    def pode_fazer_emprestimo(self, leitor) -> bool:
-        return False
 
 class Leitor:
     def __init__(self, nome: str, email: str, categoria: CategoriaLeitor, id_leitor: str = None, emprestimos_ativos: int = 0, ativo: bool = True, data_cadastro = None):
@@ -64,19 +24,36 @@ class Leitor:
         self.email = email
         self.categoria = categoria
         self.emprestimos_ativos = emprestimos_ativos
+        self.ativo = ativo
         self.data_cadastro = data_cadastro or datetime.date.today()
-        
-        self._estado = LeitorAtivo() if ativo else LeitorInativo()
+
+    @property
+    def observers(self):
+        if not hasattr(self, '_observers'):
+            self._observers = []
+        return self._observers
+
+    def adicionar_observer(self, observer: LeitorObserver):
+        self.observers.append(observer)
 
     def pode_fazer_emprestimo(self) -> bool:
- 
-        return self._estado.pode_fazer_emprestimo(self)
+        if not self.ativo:
+            return False
+        return self.emprestimos_ativos < self.categoria.limite_emprestimos
         
     def inativar(self):
+        self.ativo = False
+        for obs in self.observers:
+            obs.leitor_inativado(self)
+
+class FabricaCategoriaLeitor:
+    @staticmethod
+    def criar(tipo_categoria: str) -> CategoriaLeitor:
+        tipo = tipo_categoria.strip().lower()
+        if tipo == "aluno":
+            return CategoriaLeitor(nome="Aluno", limite_emprestimos=3)
+        elif tipo == "professor":
+            return CategoriaLeitor(nome="Professor", limite_emprestimos=5)
         
-        self._estado = LeitorInativo()
-        
-    @property
-    def ativo(self) -> bool:
-       
-        return isinstance(self._estado, LeitorAtivo)
+        # Caso padrão se a categoria não for reconhecida
+        return CategoriaLeitor(nome=tipo_categoria, limite_emprestimos=1)

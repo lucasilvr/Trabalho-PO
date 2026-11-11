@@ -1,6 +1,5 @@
 import pytest
 from biblioteca.cadastro.entrypoints.flask_app import app
-from sqlalchemy.orm import clear_mappers
 from biblioteca.cadastro.adapters import orm
 
 @pytest.fixture
@@ -11,10 +10,10 @@ def client():
 
 @pytest.fixture(autouse=True)
 def setup_mappers():
-    clear_mappers()
+    orm.clear_mappers()
     orm.start_mappers()
     yield
-    clear_mappers()
+    orm.clear_mappers()
 
 def test_cadastrar_leitor_retorna_201_com_id(client):
     dados = {

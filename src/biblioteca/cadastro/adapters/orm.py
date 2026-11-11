@@ -30,3 +30,7 @@ def start_mappers():
             )
         }
     )
+
+
+def clear_mappers():
+    mapper_registry.dispose()

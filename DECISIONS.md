@@ -1,5 +1,40 @@
 # DECISIONS
 
+## Nota do grupo sobre as tags da Fase 2
+
+As tags `fase2-checkpoint-2` e `fase2-checkpoint-3` foram criadas antes de todos os
+trabalhos do checkpoint estarem integrados à `main` e apontam para commits da branch
+de um integrante, e não para a `main`:
+
+| Tag | Commit | Criada em |
+|---|---|---|
+| `fase2-checkpoint-2` | `27d0ec9` (branch `docs/fase2-checkpoint-2`) | 03/11, 23h22 |
+| `fase2-checkpoint-3` | `3347127` (branch `docs/fase2-checkpoint-3`) | 05/11, 11h17 |
+
+A tag `fase2-checkpoint-1` não foi criada.
+
+Por isso, essas tags não contêm todos os commits do checkpoint. Para permitir a
+conferência, registramos abaixo quando o trabalho de cada integrante foi integrado
+à `main`, por pull request:
+
+| Integrante | Checkpoint | Pull request / merge na `main` | Data e hora |
+|---|---|---|---|
+| João | CP2 | #10 — `641d2ff` | 03/11, 09h46 |
+| Lucas | CP2 | #13 — `88f98d9` | 09/11, 15h34 |
+| João | CP3 | #14 — `066de4f` | 10/11, 13h16 |
+| Sandy | CP2 | #11 — `9bf7208` | 10/11, 20h15 |
+| Sandy | CP1 | #15 — `2815017` | 10/11, 20h18 |
+| Isabella | CP3 | #16 — `54f2072` | 10/11, 20h44 |
+| Lucas | CP3 | #17 — `7325449` | 10/11, 22h00 |
+| Isabella | CP3 | #18 — `1856741` | 11/11, 00h25 |
+| Ana Laura | CP3 | #20 — `db4c281` | 11/11, 01h13 |
+| Sandy | CP3 | #12 — `7d53f53` | 11/11, 01h17 |
+
+Optamos por não apagar nem recriar as tags já publicadas, para não alterar referências
+criadas dentro dos prazos. Os commits de cada integrante podem ser conferidos pelos
+hashes citados nas subseções individuais. A tag `fase2-entrega` será criada na `main`,
+após a integração de todos os trabalhos e com a CI verde.
+
 ## Sandy Fortes Cabral
 
 ### Fase 1 — Checkpoint 1

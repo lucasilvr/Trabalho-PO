@@ -449,6 +449,35 @@ Testes unitários da camada de serviço usando `FakeFilaEsperaRepository` e uma 
 29-09-2026 
 Os serviços recebem o repositório abstrato e a sessão, e fazem o commit somente no caminho feliz, deixando o endpoint Flask responsável apenas por traduzir a requisição HTTP e as exceções. A devolução e a atualização operam sobre a FilaEspera, e não sobre a Reserva isolada, pois a invariante de transferência do direito após 48 horas pertence à raiz do agregado. O relacionamento ORM ordena as reservas por data_reserva, preservando a ordem de chegada da fila ao carregar do banco.
 
+#### Uso de IA (declaração feita em 13/11/2026)
+
+Na Fase 1, a regra da disciplina não permitia gerar código com IA. Declaro que, em 29/09/2026, usei o Claude (Claude Code) para resolver os conflitos de merge e reorganizar o módulo em `src/biblioteca/reservas/` (`8e5972d`) e que a IA gerou a camada de serviço, a API Flask, o `FakeFilaEsperaRepository`, os testes de integração e e2e, a igualdade por identidade das entidades e o texto desta subseção de Entrega (commits `0fc1ab3`, `eebeb34`, `6cdca3f`, `2a2e178`, `1af9fe2`, `22aaf6f`, `06e011b`, `fb7a001` e `6dd3193`). São de minha autoria, sem IA, o domínio (`Reserva` e `FilaEspera`), o mapeamento ORM, o repositório original e os testes iniciais (`f185330`, `99b7408`, `2496e8f` e `75a7802`). Faço esta declaração para que a autoria da Fase 1 fique registrada corretamente.
+
+### Fase 2 — Checkpoint 1
+
+#### Implementação
+
+Não entreguei o checkpoint 1 dentro do prazo (22/10/2026). O ADR que deveria fazer parte dele foi escrito depois, na entrega final:
+
+13 - 11 - 2026
+`c828810` — docs(reservas): adiciona ADR sobre persistencia da Reserva pela FilaEspera
+
+O ADR registra a decisão da Fase 1 de persistir as reservas apenas pela raiz `FilaEspera`.
+
+#### Arquivos
+
+- `docs/adr/0005-persistencia-reserva-pela-fila-espera.md`
+
+#### Decisão de projeto
+
+13 - 11 - 2026
+
+Escolhi registrar no ADR a decisão de não criar um repositório para a `Reserva`, porque é a decisão que mais influenciou o restante do agregado: a refatoração OCP e o padrão State foram feitos sem mudar o repositório.
+
+#### Uso de IA
+
+Utilizei o Claude (Claude Code) para redigir o ADR a partir da decisão descrita no meu autorrelato do checkpoint 2 da Fase 1. Revisei o texto e sou responsável pelo conteúdo.
+
 ### Fase 2 — Checkpoint 2
 
 #### Implementação
@@ -489,6 +518,10 @@ Optei por tornar o prazo um atributo com valor padrão, em vez de criar uma hier
 #### Uso de IA
 
 Utilizei o Claude (Claude Code) para analisar o código do agregado e sugerir a violação de OCP, implementar a refatoração, escrever os novos testes e redigir um rascunho de `docs/solid.md` e desta subseção. Revisei o diff, rodei a suíte de testes antes de commitar e ajustei o texto, sendo responsável pelo resultado final.
+
+#### Integração na `main`
+
+Os commits deste checkpoint foram integrados à `main` pelo PR #10 (`641d2ff`, 03/11, 09h46). Ver a nota do grupo sobre as tags no início do documento.
 
 ### Fase 2 — Checkpoint 3
 
@@ -535,6 +568,48 @@ Mantive o `status` como texto na tabela `reservas` e fiz a `Reserva` encontrar o
 #### Uso de IA
 
 Utilizei o Claude (Claude Code) para escrever os testes e redigir os rascunhos de `docs/gof.md` (incluindo o diagrama Mermaid) e desta subseção. Revisei o código e os textos, rodei a suíte de testes antes de cada commit e sou responsável pelo resultado final.
+
+#### Integração na `main`
+
+Os commits deste checkpoint foram integrados à `main` pelo PR #14 (`066de4f`, 10/11, 13h16). Ver a nota do grupo sobre as tags no início do documento.
+
+### Fase 2 — Entrega
+
+#### Implementação
+
+13 - 11 - 2026
+`c828810` — docs(reservas): adiciona ADR sobre persistencia da Reserva pela FilaEspera
+
+15 - 11 - 2026
+`5f7b956` — docs: adiciona tabela Quem faz o que e nota do grupo sobre as tags
+
+Transformei a lista da equipe no `README.md` na tabela "Quem faz o quê" exigida pelo enunciado e escrevi, no início deste documento, a nota do grupo que registra quando o trabalho de cada integrante foi integrado à `main`, já que as tags dos checkpoints 2 e 3 não apontam para a `main`.
+
+16 - 11 - 2026
+docs(reservas): registra autorrelato da entrega final (commit que acompanha esta subseção)
+
+Acrescentei a subseção do checkpoint 1, a declaração de uso de IA da Fase 1, as referências de integração dos checkpoints 2 e 3 e esta subseção.
+
+#### Arquivos
+
+- `docs/adr/0005-persistencia-reserva-pela-fila-espera.md`
+- `README.md`
+- `DECISIONS.md`
+
+#### Decisão de projeto
+
+15 - 11 - 2026
+
+Optei por não apagar nem recriar as tags dos checkpoints 2 e 3. Qualquer commit escolhido deixaria de fora o trabalho de algum integrante, e as tags novas teriam data posterior aos prazos. Registrar os merges com hash e horário permite conferir a entrega de cada um sem alterar referências já publicadas.
+
+#### Uso de IA
+
+Utilizei o Claude (Claude Code) para levantar no histórico os horários de merge de cada pull request, redigir a nota do grupo sobre as tags, montar a tabela do `README.md` e redigir os rascunhos desta subseção e do parágrafo de reflexão, que revisei e ajustei. Sou responsável pelo resultado final.
+
+#### Reflexão
+
+A Fase 2 mudou a forma como eu enxergo o código que eu mesmo escrevi. Na Fase 1, a `Reserva` parecia simples: três métodos curtos e um prazo fixo de 48 horas. Ao procurar uma violação de SOLID, percebi que esse número fixo impedia uma mudança de requisito bem plausível, como prazos diferentes por categoria de leitor, e que bastava transformá-lo em atributo para fechar a classe para modificação. No checkpoint 3, ao aplicar o padrão State, descobri um problema que eu nunca tinha notado: uma reserva expirada podia voltar a ficar disponível, e uma reserva disponível podia ter o prazo reiniciado. Os testes que escrevi para mostrar o problema falharam no código antigo, e isso me mostrou na prática que um padrão de projeto só vale a pena quando resolve um problema real do domínio. Também entendi melhor o papel dos testes como rede de segurança: as duas refatorações foram feitas sem alterar nenhum teste existente, e foi isso que me deu confiança de que o comportamento foi preservado. O que eu faria diferente é a organização do tempo. Atrasei o checkpoint 1 e concentrei commits perto dos prazos, o que prejudica a avaliação do processo. Também usaria a IA de forma mais transparente desde o início, declarando cada uso no momento em que acontece, e escreveria mais código por conta própria para fixar o conteúdo. Por fim, combinaria com o grupo, desde o começo, quem cria as tags e quando, para que elas sempre apontem para a `main` com o trabalho de todos.
+
 
 ## Ana Laura
 

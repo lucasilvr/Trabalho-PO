@@ -895,14 +895,72 @@ Foram adicionados testes End-to-End (E2E) simulando requisições HTTP diretas a
 28-09-2026 
 A camada de serviço foi utilizada para orquestrar as validações e a injeção do repositório, garantindo que o endpoint Flask apenas lide com tráfego web e não contenha regras de negócio.
 
+## Isabella Vieira da Motta
+
 ### Fase 2 — Checkpoint 1
+
 #### Implementação
-- Criação do ADR `0004-encapsulamento-categoria-leitor.md` documentando a decisão arquitetural de encapsular as regras e limites de empréstimo no Value Object `CategoriaLeitor`.
+16-11-2026
+`d1d42f7` — chore(leitores): sincroniza com a main, remove docs indevidos, renomeia adr e move testes
+Elaborei a documentação da decisão arquitetural (ADR 0004) referente à separação de responsabilidades no módulo de Leitores. A decisão focou em isolar as regras de negócio de limite de empréstimos no Value Object `CategoriaLeitor`.
+
+#### Arquivos
+- `docs/adr/0004-encapsulamento-categoria-leitor.md`
+
+#### Testes
+16-11-2026
+Revisei e movi os testes unitários da Fase 1 (`test_leitores.py` para a pasta `unit`) para garantir que a documentação arquitetural proposta refletia fielmente o comportamento implementado e validado pela integração contínua (CI).
+
+#### Decisão de projeto
+16-11-2026
+Formalizei a decisão de encapsular as regras no Value Object para proteger a entidade raiz (`Leitor`). Isso garante que a entidade principal foque apenas na sua identidade e ciclo de vida, sem se acoplar a regras de limite que podem mudar no futuro (respeitando o Princípio de Responsabilidade Única).
+
+#### Uso de IA
+Utilizei IA generativa para debater o uso de Value Objects e auxiliar na revisão gramatical do ADR. Todo o texto foi validado manualmente.
+
 
 ### Fase 2 — Checkpoint 2
+
 #### Implementação
-- Documentação da aplicação dos princípios SRP e OCP no módulo de Leitores no ficheiro `docs/solid.md`, destacando a separação de responsabilidades no momento da inativação de leitores.
+16-11-2026
+`ca8bc8d` — docs(leitores): corrige autorrelato e finaliza solid/gof
+Documentei a aplicação e refatoração do módulo com base nos princípios SOLID, com foco específico no SRP (Single Responsibility Principle) através do uso do VO `CategoriaLeitor`, e preparo para o OCP (Open/Closed Principle) na ação de inativação do usuário.
+
+#### Arquivos
+- `docs/solid.md`
+
+#### Testes
+16-11-2026
+Garantia de que os testes E2E e de repositório continuavam passando sem depender de lógicas procedurais rígidas na camada de serviços. 
+
+#### Decisão de projeto
+16-11-2026
+Optei por registrar analiticamente como a estrutura de objetos já desenhada preparava terreno para estender comportamentos, fundamentando a necessidade de refatorar o método de inativação (que estava engessado) para o Checkpoint seguinte.
+
+#### Uso de IA
+Utilizei Claude e Gemini para analisar o código em busca de violações SOLID, o que ajudou a identificar a quebra do OCP e a formatar o documento `solid.md`.
+
 
 ### Fase 2 — Checkpoint 3 (GoF)
+
 #### Implementação
-- Substituição do padrão *State* pelo padrão comportamental *Observer* na inativação de leitores, permitindo notificar serviços externos sem acoplar a classe de domínio principal.
+10-11-2026
+`a86ffe1` — refactor(leitores): substitui padrao State por Observer e atualiza documentacao
+Substituí o padrão *State* pelo padrão comportamental *Observer* no ciclo de inativação de leitores. Adicionei a interface abstrata `LeitorObserver`, transformando a entidade `Leitor` num *Subject* que notifica sistemas externos sem os conhecer.
+
+#### Arquivos
+- `src/biblioteca/cadastro/domain/model.py`
+- `src/biblioteca/cadastro/adapters/orm.py`
+- `src/biblioteca/cadastro/tests/unit/test_leitor_observer.py`
+- `docs/gof.md`
+
+#### Testes
+10-11-2026
+Implementei o arquivo `test_leitor_observer.py` contendo o `MockEmailObserver` isolado. Os testes garantem que o estado do observador (mock) é alterado para "notificado" quando o método `inativar()` do leitor é chamado, mantendo a cobertura total sem quebrar o mapeamento do SQLAlchemy.
+
+#### Decisão de projeto
+10-11-2026
+Optei pelo *Observer* em detrimento do *State* para focar no desacoplamento. O Observer permite que novos efeitos colaterais pós-inativação (como enviar e-mails ou cancelar reservas) sejam adicionados futuramente apenas criando novos observadores, mantendo a classe central intocada (OCP).
+
+#### Uso de IA
+Utilizei o Gemini para debater a troca do padrão State para Observer e auxiliar com o mapeamento ORM. Adaptei e testei todo o código.

@@ -461,3 +461,95 @@ A aprovação de toda a suíte demonstrou que a refatoração não provocou regr
 A alteração exigiu modificar a assinatura do construtor de `OrdemServico` e atualizar os pontos do código que criavam essa entidade. A validação de disponibilidade passou a ser responsabilidade da camada de serviço, que agora concentra essa verificação antes de solicitar a criação da ordem.
 
 O custo da mudança foi pequeno, pois não exigiu a criação de novas classes ou estruturas. A alteração compensa por separar as responsabilidades dos agregados e reduzir o acoplamento entre Manutenção e Acervo.
+
+## Isabella Vieira da Motta — Leitores
+
+### Princípios violados
+
+- **Single Responsibility Principle (SRP):** A entidade raiz `Leitor` acumulava a gestão dos seus dados cadastrais e o processamento de regras mutáveis, como a lógica de limites de empréstimo por categoria.
+- **Open/Closed Principle (OCP):** O método `inativar()` era rígido. Adicionar novos efeitos colaterais (como enviar emails ou cancelar reservas pendentes) exigiria modificar a classe principal, violando a premissa de que deve estar fechada para modificação e aberta para extensão.
+
+### Código antes
+
+Comportamento introduzido nos primeiros commits do agregado (final de setembro de 2026):
+
+```python
+# src/biblioteca/cadastro/domain/model.py (antes)
+class Leitor:
+    def __init__(self, nome: str, email: str, tipo_categoria: str, emprestimos_ativos: int = 0):
+        self.nome = nome
+        self.tipo_categoria = tipo_categoria
+        self.emprestimos_ativos = emprestimos_ativos
+        self.ativo = True
+
+    def pode_fazer_emprestimo(self) -> bool:
+        if not self.ativo:
+            return False
+        limite = 3 if self.tipo_categoria == "Aluno" else 5
+        return self.emprestimos_ativos < limite
+        
+    def inativar(self):
+        self.ativo = False
+```
+
+### Problema concreto
+
+Como a entidade `Leitor` concentrava as regras de negócio e as ações de mudança de estado, surgiram dois problemas:
+
+1. **Violação de SRP:** Mudanças na política da biblioteca (ex: alterar limites) exigiam alterar e retestar toda a entidade `Leitor`.
+2. **Violação de OCP:** A necessidade de engatilhar eventos externos durante a inativação forçaria a entidade a conhecer serviços de fora, criando um forte acoplamento no domínio.
+
+### Refatoração
+
+A separação (VO) ocorreu na Fase 1 e a extensão (Observer) na Fase 2. Os arquivos alterados foram:
+
+- `src/biblioteca/cadastro/domain/model.py`: Criação do VO `CategoriaLeitor` (SRP) e da interface `LeitorObserver` (OCP).
+- `src/biblioteca/cadastro/adapters/orm.py`: Uso do padrão *Composite* do SQLAlchemy para o VO.
+- `src/biblioteca/cadastro/tests/unit/test_leitor_observer.py` (novo): Testes da notificação.
+
+```python
+# src/biblioteca/cadastro/domain/model.py (depois)
+import abc
+
+class CategoriaLeitor:
+    def __init__(self, nome: str, limite_emprestimos: int):
+        self.nome = nome
+        self.limite_emprestimos = limite_emprestimos
+
+class LeitorObserver(abc.ABC):
+    @abc.abstractmethod
+    def leitor_inativado(self, leitor):
+        pass
+
+class Leitor:
+    def __init__(self, nome: str, email: str, categoria: CategoriaLeitor):
+        self.nome = nome
+        self.categoria = categoria  # Limite delegado ao VO (SRP)
+        self.ativo = True
+
+    @property
+    def observers(self):
+        if not hasattr(self, '_observers'):
+            self._observers = []
+        return self._observers
+
+    def adicionar_observer(self, observer: LeitorObserver):
+        self.observers.append(observer)
+
+    def inativar(self):
+        self.ativo = False
+        for obs in self.observers:
+            obs.leitor_inativado(self) # Aberto para extensão (OCP)
+```
+
+### Como os testes garantiram o comportamento
+- **Preservação da suíte existente:** Os testes E2E e de repositório continuaram passando, validando o mapeamento ORM sem quebrar com a nova lista de observadores.
+- **Novos testes unitários de OCP:** O `MockEmailObserver` em `test_leitor_observer.py` validou a alteração de estado externo após a notificação de inativação.
+- **Validação de SRP:** Testes unitários focados na `CategoriaLeitor` garantiram a checagem isolada de limites.
+
+### Custo da refatoração
+
+- Exigiu o uso do decorador `@property` para instanciar a lista de observers dinamicamente, impedindo erros no mapeamento do SQLAlchemy.
+- Maior complexidade no ORM devido ao uso do *Composite* para achatar o VO `CategoriaLeitor`.
+
+O custo compensa porque blinda o núcleo do usuário contra mudanças em regras de empréstimo (SRP) e permite reagir à inativação integrando múltiplos serviços externos de forma limpa, sem modificar o domínio (OCP).

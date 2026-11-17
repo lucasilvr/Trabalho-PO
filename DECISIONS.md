@@ -867,7 +867,7 @@ Implementei o mapeamento ORM com SQLAlchemy e criei os repositórios abstrato, f
 #### Testes
 28-09-2026 
 `09ee98a` — test(leitores): adiciona teste de integracao e config do banco em memoria[cite: 2]
-Foi configurada uma base de dados em memória (`conftest.py`) e criados testes de integração para validar o contrato do `Repository` com a base de dados real[cite: 2].
+Foi configurada uma base de dados em memória (`conftest.py`) e criados testes de integração para validar o contrato do `Repository` com a base de dados
 
 #### Decisão de projeto
 28-09-2026 
@@ -895,11 +895,14 @@ Foram adicionados testes End-to-End (E2E) simulando requisições HTTP diretas a
 28-09-2026 
 A camada de serviço foi utilizada para orquestrar as validações e a injeção do repositório, garantindo que o endpoint Flask apenas lide com tráfego web e não contenha regras de negócio.
 
-### Fase 2 — Checkpoint 3 (GoF)
-
-### Fase 2 — Checkpoint 3 (GoF)
-
+### Fase 2 — Checkpoint 1
 #### Implementação
-10-11-2026
-feat(leitores): substitui padrao State por Observer
-Implementei o padrão comportamental *Observer* para permitir que efeitos colaterais (como envio de emails ou logs) reajam à inativação de um leitor, sem acoplar a entidade principal a serviços externos.
+- Criação do ADR `0004-encapsulamento-categoria-leitor.md` documentando a decisão arquitetural de encapsular as regras e limites de empréstimo no Value Object `CategoriaLeitor`.
+
+### Fase 2 — Checkpoint 2
+#### Implementação
+- Documentação da aplicação dos princípios SRP e OCP no módulo de Leitores no ficheiro `docs/solid.md`, destacando a separação de responsabilidades no momento da inativação de leitores.
+
+### Fase 2 — Checkpoint 3 (GoF)
+#### Implementação
+- Substituição do padrão *State* pelo padrão comportamental *Observer* na inativação de leitores, permitindo notificar serviços externos sem acoplar a classe de domínio principal.

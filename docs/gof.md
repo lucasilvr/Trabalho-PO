@@ -141,8 +141,6 @@ classDiagram
 
 O padrão adiciona um módulo novo (`validators.py`), a classe `ValidadorCampoLivro`, as funções de montagem da cadeia e uma chamada recursiva entre os handlers. O custo compensa porque retira as validações repetidas de dentro de `services.py`, permite testar cada elo isoladamente sem banco de dados e facilita encadear novas validações no catálogo sem alterar o caso de uso.
 
-# Padrões GoF — Fase 2
-
 ## João Vicente Piller Menezes — Reserva
 
 ### Padrão e categoria
@@ -424,8 +422,6 @@ classDiagram
     Leitor --> LeitorObserver : notifica
     LeitorObserver <|-- MockEmailObserver
 ```
-
-# Padrões GoF - Fase 2
 
 ## Ana Laura Neuhaus Vega — Multas
 

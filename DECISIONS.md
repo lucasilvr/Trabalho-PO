@@ -1031,7 +1031,7 @@ Utilizei IA generativa para gerar a sintaxe do diagrama de classes em Mermaid e 
 #### Implementação
 
 17 - 11 - 2026
-`<HASH_RETROSPECTIVA>` — docs(retrospectiva): adiciona evidencias e trade-offs do modulo de multas
+`<24f37cf>` — docs(retrospectiva): adiciona evidencias e trade-offs do modulo de multas
 
 Complementei o documento `docs/retrospectiva.md` inserindo as evidências práticas do módulo de Multas nas análises de modificabilidade, refatorações SOLID (`6f219b0` e `a705916`) e composição do padrão Decorator (`1fece2f`). Também atualizei o `DECISIONS.md` com o esclarecimento de autoria do ADR 0002 (`fed5d51` e `9054433`) e a reflexão final da Fase 2.
 
@@ -1053,6 +1053,7 @@ Utilizei IA generativa para revisar a coerência textual das inserções em `doc
 #### Reflexão
 
 Ao longo da Fase 2, pude enxergar o código desenvolvido na Fase 1 sob uma perspectiva arquitetural muito mais crítica. Na primeira etapa, o foco estava em fazer os testes passarem e isolar o domínio usando mapeamento imperativo e repositórios; já nesta fase, percebi na prática como abstrações mal definidas cobram seu preço. A refatoração de SOLID no módulo de Multas mostrou que retornar valores nulos ou vazar exceções do SQLAlchemy quebrava a substituibilidade entre repositórios e acoplava a API Flask à infraestrutura. Da mesma forma, aplicar o padrão Decorator para calcular juros de mora e taxas administrativas evidenciou como a composição permite estender regras de negócio sem inflar a entidade principal com condicionais. Por outro lado, ficou claro o custo dessa arquitetura em camadas para um domínio relativamente simples: cada pequena evolução exige tocar múltiplos arquivos entre domínio, adaptadores, serviços e testes. Se começasse o projeto novamente, manteria a separação entre domínio e persistência nas regras financeiras críticas, mas evitaria camadas intermediárias desnecessárias nos fluxos puramente cadastrais. Além disso, eu padronizaria desde o início as exceções de domínio, os nomes dos arquivos de teste e a configuração de e-mail do Git, garantindo um histórico limpo, rastreável e com a suíte automatizada sempre verde desde os primeiros commits.
+
 ## Isabella Vieira da Motta
 
 ### Fase 1 — Checkpoint 1

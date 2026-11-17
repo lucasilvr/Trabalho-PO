@@ -297,6 +297,94 @@ Centralizar a criação de objetos de teste no conftest.py para promover reutili
 
 ---
 
+### Fase 2 — Checkpoint 1
+
+> **Nota:** As descrições de cada etapa representam o que era esperado para cada checkpoint do projeto. Como o desenvolvimento da minha parte foi realizado em um período de tempo reduzido, várias atividades foram executadas em paralelo para garantir o atendimento dos requisitos mínimos da solução. Dessa forma, as evidências não demonstram necessariamente uma evolução cronológica entre os checkpoints. A organização foi feita considerando o escopo entregue em cada etapa, e não o momento exato em que cada implementação foi realizada.
+
+#### Implementação
+
+Inicialmente, o construtor da entidade verificava tanto se o dano era reparável quanto se havia um exemplar disponível. Como a disponibilidade está relacionada ao módulo de Acervo, essa responsabilidade foi transferida para a camada de serviço, mantendo na entidade apenas a validação referente à reparabilidade do dano.
+
+`6567a64` - Foi elaborado um ADR para registrar a decisão de separar a validação da disponibilidade do exemplar da entidade OrdemServico.
+
+#### Arquivos
+`docs/adr/0006-validacao-disponibilidade-ordem-servico.md`
+
+#### Decisão de projeto
+A decisão foi separar as responsabilidades entre os módulos, reduzindo o acoplamento entre Manutenção e Acervo e tornando a entidade OrdemServico mais coesa.
+
+### Fase 2 — Checkpoint 2
+
+#### Implementação
+`5e0d902` - Foi realizada uma refatoração no módulo de Manutenção para atender ao princípio SRP (Single Responsibility Principle). A validação da disponibilidade do exemplar foi transferida para `OrdemServicoService`, deixando a entidade responsável apenas pelas regras relacionadas à ordem de serviço.
+
+#### Arquivos
+- `src/biblioteca/manutencao/domain/model.py`
+- `src/biblioteca/manutencao/service_layer/services.py`
+- `docs/solid.md`
+
+#### Testes
+Após a refatoração, foram executados os testes do módulo de Manutenção, com aprovação dos 10 testes existentes.
+
+#### Decisão de projeto
+A mudança buscou respeitar o princípio da responsabilidade única, evitando que a entidade de Manutenção assumisse uma responsabilidade pertencente ao contexto de Acervo.
+
+### Fase 2 — Checkpoint 3
+
+#### Implementação
+`627174f` - Foi implementado o padrão comportamental Command no módulo de Manutenção, utilizando a conclusão de uma ordem de serviço como operação encapsulada.
+
+Foi criada a classe abstrata `Command`, com o método `execute()`, e sua implementação concreta `ConcluirOrdemServicoCommand`. A classe recebe uma ordem de serviço e executa sua conclusão por meio do método `concluir()` da entidade.
+A integração foi realizada em `OrdemServicoService`, que recupera a ordem de serviço, verifica sua existência e delega a operação ao comando.
+
+`d67db1c` - A implementação e a justificativa da escolha foram registradas em `docs/gof.md`, incluindo a estrutura do padrão, seus participantes e os testes realizados.
+
+#### Arquivos
+`src/biblioteca/manutencao/service_layer/commands.py`
+`src/biblioteca/manutencao/service_layer/services.py`
+`src/biblioteca/manutencao/tests/unit/test_manutencao.py`
+
+#### Testes
+`627174f` - Foram adicionados dois testes unitários:
+- Verificação da conclusão de uma ordem de serviço por meio do `Command`.
+- Verificação de que uma ordem de serviço que não está em execução não pode ser concluída.
+
+Após a implementação, os 12 testes do módulo de Manutenção foram executados com sucesso.
+
+#### Decisão de projeto
+O padrão Command foi escolhido por permitir encapsular a operação de conclusão de uma ordem de serviço em um objeto próprio, separando a solicitação da execução da ação.
+
+A escolha também considerou a necessidade de utilizar um padrão GoF diferente dos demais integrantes do grupo.
+
+### Fase 2 — Entrega
+
+#### Consolidação das atividades
+Foram concluídas as atividades referentes à refatoração SOLID e à implementação do padrão GoF no módulo de Manutenção e Conservação do Acervo.
+Também foi elaborado um ADR para registrar a decisão arquitetural relacionada à separação das responsabilidades entre os módulos de Manutenção e Acervo.
+
+#### Arquivos entregues
+`docs/solid.md`
+`docs/gof.md`
+`docs/adr/0006-validacao-disponibilidade-ordem-servico.md`
+`src/biblioteca/manutencao/domain/model.py`
+`src/biblioteca/manutencao/service_layer/services.py`
+`src/biblioteca/manutencao/service_layer/commands.py`
+`src/biblioteca/manutencao/tests/unit/test_manutencao.py`
+
+#### Uso de IA
+A IA foi utilizada como ferramenta de apoio durante o desenvolvimento, principalmente para auxiliar na compreensão dos princípios SOLID e dos padrões GoF, além de apoiar na avaliação de alternativas de implementação e revisão de trechos de código ou documentação.
+
+As sugestões foram avaliadas e adaptadas ao contexto do projeto. Todas as decisões de arquitetura, implementação e validação permaneceram sob minha responsabilidade, sendo a solução verificada por meio da execução dos testes automatizados.
+
+#### Reflexão
+A atividade permitiu aprofundar a compreensão sobre a importância da separação de responsabilidades e da organização do código em camadas.
+A refatoração SRP evidenciou como uma entidade pode acabar assumindo responsabilidades de outro módulo, aumentando o acoplamento entre os contextos do sistema.
+
+Já a implementação do Command demonstrou como uma operação pode ser encapsulada, tornando sua execução mais organizada e permitindo separar a lógica de solicitação da ação propriamente dita.
+Um dos principais aprendizados foi perceber que a aplicação de padrões de projeto deve partir de uma necessidade concreta do sistema, e não apenas da intenção de utilizar determinado padrão.
+
+---
+
 ## Lucas Dias Silveira
 
 ### Fase 1 — Checkpoint 1

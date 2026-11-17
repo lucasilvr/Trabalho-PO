@@ -1,67 +1,87 @@
-# SOLID no agregado de Acervo
-
-## Contexto
-
-O agregado de Acervo representa o catálogo da biblioteca e centraliza a regra mais importante do módulo: um livro só pode ser inativado quando todos os seus exemplares estiverem disponíveis.
-
-A refatoração aplicada no agregado busca manter essa regra explícita no domínio, deixando a camada de serviço responsável apenas por orquestrar a operação e validar entradas simples.
-
-## Princípios SOLID aplicados
-
-### 1. SRP (Single Responsibility Principle)
-
-A entidade `Livro` continua sendo responsável por seu estado e por suas validações internas, mas a regra de negócio ficou melhor distribuída:
-
-- `pode_ser_inativado()` responde se a operação é permitida
-- `validar_inativacao()` dispara a exceção quando a regra é violada
-- `inativar()` executa apenas a transição de estado
-
-Antes, a validação e a mutação ficaram concentradas em um único método. Agora, o comportamento ficou mais legível e mais fácil de evoluir.
-
-### 2. OCP (Open/Closed Principle)
-
-A regra de inativação foi organizada como um ponto de extensão do comportamento do agregado, sem exigir mudanças invasivas no restante do sistema.
-
-Se no futuro a regra passar a considerar dados adicionais, como categoria de leitor, histórico de exemplares ou regras de manutenção, esse ajuste pode ser feito sem quebrar o contrato do módulo.
-
-### 3. DIP (Dependency Inversion Principle)
-
-A camada de serviço continua dependendo de abstrações, e não de detalhes da infraestrutura. Ela trabalha com `AbstractRepository`, e não com a implementação concreta do banco.
-
-Isso permite testar o caso de uso com um repositório em memória, sem depender do SQLAlchemy diretamente.
-
-## Antes e depois
-
-### Antes
-
-A lógica de validação estava executada diretamente dentro do método `inativar()`. Esse design funciona, mas mistura responsabilidade de validação e de mudança de estado em um único ponto.
-
-### Depois
-
-A sequência foi separada em três etapas bem definidas:
-
-1. verificar se o livro pode ser inativado
-2. validar a regra de domínio
-3. alterar o estado do objeto
-
-Essa estrutura reduz acoplamento, melhora a legibilidade e facilita novos testes.
-
-## Arquivos envolvidos
-
-- `src/biblioteca/acervo/domain/model.py`
-- `src/biblioteca/acervo/service_layer/services.py`
-- `src/biblioteca/acervo/adapters/orm.py`
-- `src/biblioteca/acervo/tests/unit/test_services_acervo.py`
-
-## Conclusão
-
-A refatoração do agregado Acervo melhora a clareza do domínio e centraliza a regra de negócio principal em um ponto mais explícito. Isso torna o módulo mais fácil de testar, mais fácil de manter e mais aderente aos princípios SOLID.
 # Refatorações SOLID — Fase 2
 
 Este documento registra as violações de SOLID encontradas no código da Fase 1 e as
 refatorações feitas na Fase 2. Cada integrante documenta a sua própria refatoração,
 no agregado ou módulo sob sua responsabilidade. O grupo deve cobrir, somadas as
 seções, pelo menos três princípios diferentes.
+
+## Lucas Dias Silveira — Acervo
+
+### Princípios violados
+
+- **Single Responsibility Principle (SRP):** Na Fase 1, o método `Livro.inativar()` concentrava em um único ponto a verificação de disponibilidade dos exemplares (`for exemplar in self.exemplares`), a validação da regra com lançamento de exceção e a mutação de estado (`self.ativo = False`).
+- **Open/Closed Principle (OCP) e Dependency Inversion Principle (DIP):** A regra de negócio ficava presa dentro do método de mutação `inativar()`, impedindo consultar se um livro podia ser inativado ou estender a validação sem tentar alterar o estado da entidade. Além disso, a camada de serviço (`services.py`) dependia da abstração `AbstractRepository`, mas ainda não contava com testes unitários isolados com `FakeRepository` e sessão em memória.
+
+### Código antes
+
+Introduzido nos commits da Fase 1 `ecce5f6` (20/09/2026, domínio) e `18c976d` (29/09/2026, serviço), anteriores a 06/10/2026:
+
+```python
+# src/biblioteca/acervo/domain/model.py (antes — commit ecce5f6)
+class Livro:
+    def __init__(self, isbn: str, titulo: str, autor: str):
+        self.isbn = isbn
+        self.titulo = titulo
+        self.autor = autor
+        self.exemplares: List[Exemplar] = []
+        self.ativo = True
+
+    def adicionar_exemplar(self, exemplar: Exemplar):
+        self.exemplares.append(exemplar)
+
+    def inativar(self):
+        for exemplar in self.exemplares:
+            if exemplar.status == "emprestado":
+                raise Exception(f"O livro '{self.titulo}' não pode ser inativado pois possui alguns livros emprestados.")
+        self.ativo = False
+```
+
+### Problema concreto
+
+A lógica de validação estava misturada diretamente com a mudança de estado dentro do método `inativar()`. Com isso:
+
+1. Não era possível apenas consultar se um livro estava elegível para inativação sem executar a mutação `self.ativo = False` (violação de SRP).
+2. Se no futuro a regra de inativação precisasse considerar critérios adicionais (como exemplares em manutenção ou histórico), seria necessário modificar diretamente o método que altera o estado da entidade (OCP).
+3. No adaptador ORM (`src/biblioteca/acervo/adapters/orm.py`), chamadas repetidas a `start_mappers()` entre suítes de teste causavam erro de remapeamento por falta de `clear_mappers()` e de guarda de idempotência.
+
+### Refatoração
+
+Commits "depois" (do próprio autor): `af2da29`, `dc0ac0f`, `54ce4dc` e `2fc2eea`.
+
+Arquivos envolvidos:
+- `src/biblioteca/acervo/domain/model.py`: o comportamento foi separado em três etapas com responsabilidades bem definidas:
+  - `pode_ser_inativado()` responde se a operação é permitida;
+  - `validar_inativacao()` dispara a exceção quando a regra é violada;
+  - `inativar()` executa a transição de estado após validar.
+- `src/biblioteca/acervo/service_layer/services.py`: orquestra `adicionar_livro`, `listar_livros` e `inativar_livro` dependendo de `AbstractRepository` (DIP).
+- `src/biblioteca/acervo/adapters/orm.py`: adiciona `clear_mappers()` e verificação de `_sa_class_manager` em `start_mappers()`.
+- `src/biblioteca/acervo/tests/unit/test_services_acervo.py` (novo): testes unitários da camada de serviço com `FakeRepository` e `DummySession`.
+
+```python
+# src/biblioteca/acervo/domain/model.py (depois — commits af2da29 e dc0ac0f)
+    def pode_ser_inativado(self) -> bool:
+        return not any(exemplar.status == "emprestado" for exemplar in self.exemplares)
+
+    def validar_inativacao(self):
+        if not self.pode_ser_inativado():
+            raise Exception(
+                f"O livro '{self.titulo}' não pode ser inativado pois possui alguns livros emprestados."
+            )
+
+    def inativar(self):
+        self.validar_inativacao()
+        self.ativo = False
+```
+
+### Como os testes garantiram o comportamento
+
+- Os testes da Fase 1 (`src/biblioteca/acervo/tests/unit/test_acervo.py`, `tests/integration/test_repository.py` e `tests/e2e/test_api.py`) continuaram passando sem alteração, garantindo que o comportamento observável do domínio, do repositório SQLite e da API Flask foi preservado.
+- Foram adicionados 3 novos testes unitários em `src/biblioteca/acervo/tests/unit/test_services_acervo.py` (`test_adicionar_livro_persiste_livro_no_repositorio`, `test_inativar_livro_altera_estado_do_livro` e `test_inativar_livro_lanca_erro_quando_nao_existe`), validando os casos de uso em memória com `FakeRepository` e `DummySession`.
+
+### Custo da refatoração
+
+- A entidade `Livro` passou a ter três métodos em vez de um para o fluxo de inativação, aumentando levemente a indireção interna, além da criação de `DummySession` nos testes unitários da camada de serviço.
+- O custo é pequeno e compensa porque separa consulta, validação e mutação de estado (SRP), facilita a extensão da regra de inativação (OCP) e comprova o desacoplamento da camada de serviço em relação ao SQLAlchemy (DIP).
 
 ## João Vicente Piller Menezes — Reserva
 

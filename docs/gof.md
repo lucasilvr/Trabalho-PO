@@ -69,36 +69,33 @@ ao ser recarregada do banco. Quando nenhuma categoria é informada, usa
 
 ### Padrão e categoria
 
-**Chain of Responsibility** (Cadeia de Responsabilidade)
+**Chain of Responsibility** (Cadeia de Responsabilidade) — padrão comportamental.
 
-### Contexto e problema
+### Contexto no sistema e problema
 
-O caso de uso de cadastro precisa validar ISBN, título e autor antes de criar e
-persistir um `Livro`. Fazer as validações diretamente no serviço concentra regras
-distintas em um único fluxo e exige modificá-lo sempre que um novo campo obrigatório
-for adicionado.
+O caso de uso de cadastro (`adicionar_livro` em `src/biblioteca/acervo/service_layer/services.py`) precisa validar e normalizar ISBN, título e autor antes de criar e persistir um `Livro`. Fazer as validações diretamente no serviço concentra regras distintas em um único fluxo e exige modificá-lo sempre que um novo campo obrigatório ou regra de sanitização for adicionado.
 
-### Aplicação
+### Por que Chain of Responsibility
 
-O serviço `adicionar_livro` envia os dados ao primeiro handler da cadeia. Cada
-`ValidadorCampoLivro` valida e normaliza um campo e, se estiver válido, delega os dados
-ao próximo handler. Uma entrada inválida interrompe a cadeia com `ValueError`; o livro
-só é criado quando todos os handlers terminam.
+O serviço `adicionar_livro` envia os dados ao primeiro handler da cadeia. Cada `ValidadorCampoLivro` valida e normaliza (`strip()`) um campo e, se estiver válido, delega os dados ao próximo handler. Uma entrada inválida interrompe a cadeia com `ValueError`; o livro só é criado quando todos os handlers terminam.
+
+Alternativas consideradas:
+
+- **Validações condicionais (`if/else`) direto em `services.py`:** mais simples no início, mas mistura validação de entrada com a orquestração do repositório e obriga a modificar a função de serviço a cada nova regra.
+- **Strategy único de validação:** concentraria todos os campos em uma única classe validadora, dificultando reaproveitar elos individuais (como a validação isolada de ISBN usada em `inativar_livro` via `criar_cadeia_validacao_isbn`).
 
 ### Participantes mapeados para o código
 
 | Participante GoF | Classe/função |
 |---|---|
-| Handler | `ValidadorCampoLivro` |
-| ConcreteHandler | Instâncias configuradas para ISBN, título e autor |
-| Client | `adicionar_livro` |
-| Creator da cadeia | `criar_cadeia_validacao_livro` |
+| Handler | `ValidadorCampoLivro` — `src/biblioteca/acervo/service_layer/validators.py` |
+| ConcreteHandler | Instâncias configuradas para ISBN, título e autor — `validators.py` |
+| Client | `adicionar_livro` e `inativar_livro` — `src/biblioteca/acervo/service_layer/services.py` |
+| Creator da cadeia | `criar_cadeia_validacao_livro` e `criar_cadeia_validacao_isbn` — `validators.py` |
 
-Cada handler é configurado com o nome do campo e a mensagem correspondente. A cadeia
-atual valida os três campos nessa ordem; novos validadores podem ser adicionados sem
-colocar as regras novamente dentro do serviço.
+Cada handler é configurado com o nome do campo e a mensagem correspondente. A cadeia atual valida os três campos nessa ordem; novos validadores podem ser adicionados sem colocar as regras novamente dentro do serviço.
 
-### Diagrama
+### Diagrama de classes
 
 ```mermaid
 classDiagram
@@ -132,13 +129,17 @@ classDiagram
     adicionar_livro ..> ValidacaoISBN : inicia a cadeia
 ```
 
-`ValidacaoISBN`, `ValidacaoTitulo` e `ValidacaoAutor` no diagrama representam
-instâncias de `ValidadorCampoLivro` configuradas para cada campo; não são subclasses.
+`ValidacaoISBN`, `ValidacaoTitulo` e `ValidacaoAutor` no diagrama representam instâncias de `ValidadorCampoLivro` configuradas para cada campo; não são subclasses.
 
-### Testes
+### Testes que exercitam o padrão
 
-`src/biblioteca/acervo/tests/unit/test_validators.py` verifica que a cadeia normaliza
-os três campos e que cada campo vazio interrompe a validação com erro.
+`src/biblioteca/acervo/tests/unit/test_validators.py` (commit `57125a2`):
+- `test_cadeia_valida_e_normaliza_todos_os_campos`: verifica que a cadeia normaliza os três campos (`isbn`, `titulo` e `autor`).
+- `test_cadeia_rejeita_campo_obrigatorio_vazio`: parametrizado com `@pytest.mark.parametrize`, verifica que cada campo vazio interrompe a validação com `ValueError`.
+
+### Custo da aplicação do padrão
+
+O padrão adiciona um módulo novo (`validators.py`), a classe `ValidadorCampoLivro`, as funções de montagem da cadeia e uma chamada recursiva entre os handlers. O custo compensa porque retira as validações repetidas de dentro de `services.py`, permite testar cada elo isoladamente sem banco de dados e facilita encadear novas validações no catálogo sem alterar o caso de uso.
 
 # Padrões GoF — Fase 2
 

@@ -352,24 +352,176 @@ O uso de injeção de dependências no `services.py` permitiu desacoplar complet
 
 #### Implementação
 
-Documentei uma decisão arquitetural relacionada ao módulo de Penalidades, considerando a separação entre a API, a camada de serviço e as operações do domínio. O ADR apresenta o contexto da decisão, as alternativas consideradas e suas consequências para a organização e manutenção do módulo.
+29 - 10 - 2026
+`9054433` — feat: adiciona documentos ADR e modelagem do livro
+
+Documentei, em conjunto com a Ana Laura, as decisões arquiteturais dos módulos de Acervo (`docs/adr/0002-modelagem-livro-exemplar.md`) e de Penalidades (`docs/adr/0003-api-flask-multas.md`). No commit `9054433`, adicionei o arquivo `0003-api-flask-multas.md` e revisei o arquivo `0002-modelagem-livro-exemplar.md` (que trata da separação entre `Livro` e `Exemplar` no Acervo), confirmando o status como "Aceita".
+
+#### Observação sobre a autoria dos ADRs
+
+Os ADRs do checkpoint 1 dos módulos de Acervo e de Penalidades foram escritos por mim
+e pela Ana Laura trabalhando juntos. Na hora de commitar, os arquivos acabaram
+invertidos: cada um commitou o ADR do módulo do outro.
+
+- `docs/adr/0002-modelagem-livro-exemplar.md` (Acervo, meu módulo): commitado pela
+  Ana Laura em `fed5d51` (23/10/2026). Depois, no meu commit `9054433` (29/10/2026),
+  conferi o texto com a implementação do Acervo, confirmei o status como "Aceita" e
+  removi a observação que pedia essa conferência.
+- `docs/adr/0003-api-flask-multas.md` (Penalidades, módulo da Ana Laura): commitado
+  por mim em `9054433` (29/10/2026).
+
+Como o conteúdo foi produzido em conjunto, considero o ADR 0002 como o do meu módulo.
 
 #### Arquivos
 
-- docs/adr/0003-api-flask-multas.md
+- `docs/adr/0002-modelagem-livro-exemplar.md`
+- `docs/adr/0003-api-flask-multas.md`
+- `DECISIONS.md`
 
 #### Testes
 
-Conferi a decisão documentada em relação à implementação existente do módulo de Penalidades e às verificações automatizadas do projeto.
+29 - 10 - 2026
+
+Conferi as decisões documentadas em relação à implementação existente do módulo de Acervo (`src/biblioteca/acervo/domain/model.py` e `adapters/orm.py`) e do módulo de Penalidades, bem como às verificações automatizadas do projeto.
 
 #### Decisão de projeto
 
+29 - 10 - 2026
 
-A decisão documentada busca manter as responsabilidades da interface HTTP separadas da orquestração dos casos de uso e das regras de negócio do módulo de Penalidades.
+Mantive `Livro` e `Exemplar` como conceitos separados no domínio do Acervo (e a API HTTP separada das regras de domínio e da camada de serviço), pois isso permite controlar o estado físico de cada exemplar individualmente sem misturar regras de negócio com protocolo HTTP ou detalhes de persistência.
 
 #### Uso de IA
 
-Se eu utilizar o rascunho produzido com auxílio de IA generativa, declararei esse uso e revisarei o conteúdo em relação ao código real de Penalidades, assumindo a responsabilidade pela versão final.
+Utilizei IA generativa principalmente para compreender melhor os conceitos de ADR e de documentação arquitetural cobrados na disciplina, entender o fluxo do que precisava ser entregue no checkpoint e organizar a estrutura textual do documento. Conferi o conteúdo em relação ao código real do repositório, assumindo a responsabilidade pela versão final.
+
+### Fase 2 — Checkpoint 2
+
+#### Implementação
+
+29 - 10 - 2026
+`af2da29` — feat: aplica principio de responsabilidade unica
+`de3107a` / `dc0ac0f` — feat: separa validacao de inativacao do dominio
+
+Refatorei a entidade `Livro` em `src/biblioteca/acervo/domain/model.py` (cujo código original vinha do commit `ecce5f6`, de 20/09/2026) aplicando o Princípio da Responsabilidade Única (SRP). Antes, o método `inativar()` fazia o laço de verificação dos exemplares, disparava a exceção e alterava o estado no mesmo lugar. Separei esse comportamento em três métodos distintos: `pode_ser_inativado()`, `validar_inativacao()` e `inativar()`, além de adicionar `clear_mappers()` e verificação de mapeamento existente em `src/biblioteca/acervo/adapters/orm.py`.
+
+02 - 11 - 2026
+`54ce4dc` — fix: separa validacao de inativacao e ajusta mapeamento orm
+`2fc2eea` — feat: add analise solid e testes service layer
+
+Ajustei o mapeamento imperativo da relação `exemplares` em `orm.py`, evoluí `src/biblioteca/acervo/service_layer/services.py` (`adicionar_livro`, `listar_livros` e `inativar_livro`) mantendo a dependência na abstração `AbstractRepository` (DIP), criei os testes unitários da camada de serviço em `src/biblioteca/acervo/tests/unit/test_services_acervo.py` e registrei a análise em `docs/solid.md`.
+
+#### Arquivos
+
+- `src/biblioteca/acervo/domain/model.py`
+- `src/biblioteca/acervo/adapters/orm.py`
+- `src/biblioteca/acervo/service_layer/services.py`
+- `src/biblioteca/acervo/tests/unit/test_services_acervo.py`
+- `docs/solid.md`
+
+#### Testes
+
+02 - 11 - 2026
+
+Os testes da Fase 1 (`test_acervo.py`, `test_repository.py` e `test_api.py`) continuaram passando sem alteração, garantindo que o comportamento existente não quebrou. Adicionei 3 novos testes unitários em `test_services_acervo.py` usando `FakeRepository` e `DummySession` para validar a adição de livros, a inativação e o erro ao tentar inativar um livro inexistente.
+
+#### Decisão de projeto
+
+02 - 11 - 2026
+
+Optei por dividir o método `inativar()` em `pode_ser_inativado()`, `validar_inativacao()` e `inativar()` porque separar a consulta booleana da validação e da mudança de estado deixa cada método com uma única responsabilidade e permite reutilizar a checagem de disponibilidade sem precisar alterar o estado do livro.
+
+#### Uso de IA
+
+Utilizei IA generativa mais para estudar e entender como os princípios SOLID (especialmente SRP, OCP e DIP) se aplicavam na prática ao meu agregado, entender o fluxo do trabalho pedido no checkpoint e tirar dúvidas sobre recursos e sintaxe da linguagem Python (como `any()`, compreensões de gerador e funcionamento do `pytest`), já que não tenho tanta familiaridade com Python no dia a dia. Não usei a IA para gerar o trabalho inteiro de forma automática; fui entendendo o fluxo, implementando, testando e revisando cada ajuste.
+
+#### Integração na `main`
+
+Os commits deste checkpoint foram integrados à `main` pelo PR #13 (`88f98d9`, 09/11, 15h34). Ver a nota do grupo sobre as tags no início do documento.
+
+### Fase 2 — Checkpoint 3
+
+#### Implementação
+
+09 - 11 - 2026
+`57125a2` — feat: aplica chain of responsibility na validacao de livros
+
+Implementei o padrão GoF comportamental **Chain of Responsibility** no módulo de Acervo. Criei `src/biblioteca/acervo/service_layer/validators.py` com o handler `ValidadorCampoLivro` e as funções `criar_cadeia_validacao_livro()` e `criar_cadeia_validacao_isbn()`, encadeando a validação e normalização (`strip()`) dos campos `isbn`, `titulo` e `autor`. Atualizei `src/biblioteca/acervo/service_layer/services.py` para usar a cadeia antes de instanciar ou buscar o `Livro` e criei os testes unitários em `src/biblioteca/acervo/tests/unit/test_validators.py`.
+
+09 - 11 - 2026
+`6787a54` — doc: gof.md
+
+Documentei a aplicação do padrão Chain of Responsibility em `docs/gof.md`, incluindo contexto, tabela de participantes, diagrama em Mermaid e descrição dos testes.
+
+10 - 11 - 2026
+`40f3ccb` — fix: corrige ci de cadastro isolando os mapeadores orm
+
+Ajustei o isolamento dos mapeadores ORM (`clear_mappers`) durante a integração na `main` para resolver o conflito entre testes na pipeline de CI.
+
+#### Arquivos
+
+- `src/biblioteca/acervo/service_layer/validators.py`
+- `src/biblioteca/acervo/service_layer/services.py`
+- `src/biblioteca/acervo/tests/unit/test_validators.py`
+- `docs/gof.md`
+- `src/biblioteca/cadastro/adapters/orm.py`
+- `src/biblioteca/cadastro/tests/conftest.py`
+- `src/biblioteca/cadastro/tests/e2e/test_leitores_api.py`
+
+#### Testes
+
+09 - 11 - 2026
+
+Foram criados os testes unitários em `test_validators.py` verificando que a cadeia valida e remove espaços extras dos três campos obrigatórios e que qualquer campo vazio interrompe a cadeia lançando `ValueError` (exercitado com `@pytest.mark.parametrize` para ISBN, título e autor). Todos os testes do módulo Acervo (`12 passed`) e da CI continuaram passando.
+
+#### Decisão de projeto
+
+09 - 11 - 2026
+
+Escolhi aplicar o padrão Chain of Responsibility na validação de entrada do serviço (`ValidadorCampoLivro`) em vez de manter chamadas de validação fixas dentro de `adicionar_livro`, porque isso desacopla cada etapa de validação e permite encadear novas regras para o cadastro de livros sem modificar o fluxo principal do serviço.
+
+#### Uso de IA
+
+Utilizei IA generativa principalmente para entender melhor o funcionamento dos padrões GoF (e como o Chain of Responsibility se encaixava no problema de validação do Acervo), tirar dúvidas sobre a sintaxe de tipagem, dicionários e `@pytest.mark.parametrize` em Python — linguagem com a qual tenho menos costume — e ajudar a montar a sintaxe do diagrama Mermaid para o `docs/gof.md`. A implementação e a conferência com os testes foram acompanhadas e validadas por mim.
+
+#### Integração na `main`
+
+Os commits deste checkpoint foram integrados à `main` pelo PR #17 (`7325449`, 10/11, 22h00). Ver a nota do grupo sobre as tags no início do documento.
+
+### Fase 2 — Entrega
+
+#### Implementação
+
+17 - 11 - 2026
+`docs(acervo): padroniza solid.md e finaliza autorrelato da Fase 2 no DECISIONS` (commit que acompanha esta subseção)
+
+Padronizei a seção do agregado de Acervo em `docs/solid.md` para o formato unificado do documento (`## Lucas Dias Silveira — Acervo`, mantendo o título geral `# Refatorações SOLID — Fase 2` no topo e incluindo os hashes de antes e depois, trechos de código, testes e custo da refatoração), complementei a seção do Acervo em `docs/gof.md` e `docs/adr/0002-modelagem-livro-exemplar.md`, e finalizei todas as subseções da Fase 2 (incluindo o esclarecimento sobre a autoria dos ADRs nos commits `fed5d51` e `9054433`, os relatos dos checkpoints 2 e 3 e a reflexão final) neste `DECISIONS.md`.
+
+#### Arquivos
+
+- `DECISIONS.md`
+- `docs/solid.md`
+- `docs/gof.md`
+- `docs/adr/0002-modelagem-livro-exemplar.md`
+
+#### Testes
+
+17 - 11 - 2026
+
+Executei as três suítes de testes configuradas na CI (`unit`, `integration` e `e2e`), confirmando que todos os testes do repositório continuam passando.
+
+#### Decisão de projeto
+
+17 - 11 - 2026
+
+Padronizei a documentação de SOLID e GoF do módulo de Acervo seguindo a mesma estrutura das demais seções do grupo, garantindo que os hashes dos commits de antes e depois e a explicação sobre a autoria cruzada dos ADRs no Checkpoint 1 fiquem explícitos para conferência no histórico do Git.
+
+#### Uso de IA
+
+Ao longo da Fase 2, utilizei IA generativa principalmente para entender melhor os conteúdos teóricos da disciplina (princípios SOLID, padrões de projeto GoF, ADRs e arquitetura em camadas), compreender o fluxo do que precisava ser feito em cada etapa do trabalho e tirar dúvidas sobre a linguagem Python, já que não mexo tanto com Python no dia a dia. Não utilizei a IA para fazer o código totalmente por conta própria, mas sim como apoio para entender a linguagem e estruturar e revisar os textos de documentação e deste `DECISIONS.md`, assumindo total responsabilidade pelo resultado final.
+
+#### Reflexão
+
+Realizar a Fase 2 no módulo de Acervo me ajudou muito a enxergar na prática conceitos de engenharia de software que antes pareciam apenas teóricos. Na Fase 1, meu foco principal tinha sido fazer o código funcionar nas camadas exigidas, mesmo sem ter tanta familiaridade com Python. Quando precisei revisitar o próprio código na Fase 2 para aplicar SOLID, percebi que o método `inativar()` da classe `Livro` fazia coisas demais ao mesmo tempo: percorria os exemplares, decidia se lançava erro e alterava o atributo `ativo`. Dividir essa lógica em `pode_ser_inativado()`, `validar_inativacao()` e `inativar()`, junto com os testes unitários da camada de serviço usando `FakeRepository`, deixou o código muito mais claro e seguro de mexer. Da mesma forma, aplicar o padrão *Chain of Responsibility* (`ValidadorCampoLivro`) no Checkpoint 3 mostrou como organizar validações em cadeia evita poluir o serviço `adicionar_livro` com várias verificações seguidas. Outro aprendizado importante foi entender o papel dos frameworks e da inversão de controle, principalmente quando enfrentamos erros de mapeadores duplicados do SQLAlchemy na CI e precisei entender como `start_mappers()` e `clear_mappers()` funcionavam por trás dos panos. O que eu faria diferente seria distribuir melhor os commits ao longo das semanas para não concentrar entregas perto do prazo, ter mais atenção no momento de commitar arquivos feitos em dupla (como ocorreu na troca dos ADRs com a Ana Laura no Checkpoint 1) e atualizar o `DECISIONS.md` imediatamente após cada PR.
 
 ---
 

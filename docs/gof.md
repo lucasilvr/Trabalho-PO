@@ -509,3 +509,91 @@ classDiagram
 
 **Por que compensa:**
 O custo compensa amplamente porque separa as regras de encargo financeiro da classe de domínio `Multa`. Permite criar e combinar novos tipos de acréscimos (ex.: multas por reincidência ou descontos pontuais) sem alterar nenhuma linha do código-fonte da entidade `Multa`, mantendo o domínio aderente aos princípios SOLID (SRP e OCP) e sem exigir alterações de schema no banco de dados.
+
+## Karine Vitória Marinho de Moraes — Manutenção e Conservação do Acervo
+
+### Padrão e categoria
+
+**Command** — padrão comportamental.
+
+### Contexto no sistema e problema
+
+No módulo de Manutenção e Conservação do Acervo, uma ordem de serviço pode passar por diferentes operações durante seu ciclo de vida, como iniciar execução, concluir e cancelar.
+
+A conclusão de uma ordem de serviço exige que ela esteja em execução. Essa regra é implementada pelo método `concluir()` da entidade `OrdemServico`, que altera seu status para `CONCLUIDA` quando a transição é válida e lança `ValueError` caso contrário.
+
+Antes da aplicação do padrão, o serviço `OrdemServicoService` chamava diretamente o método `concluir()` da entidade. A solicitação de conclusão estava, portanto, diretamente associada à execução da operação.
+
+### Por que Command
+
+O padrão Command permite encapsular uma solicitação em um objeto independente, separando quem solicita uma operação de quem efetivamente a executa.
+
+Na implementação, a conclusão da ordem de serviço é encapsulada na classe `ConcluirOrdemServicoCommand`. O serviço cria o comando com a ordem de serviço correspondente e solicita sua execução por meio do método `execute()`.
+
+A regra de negócio continua pertencendo à entidade `OrdemServico`, enquanto o comando representa a solicitação de conclusão.
+
+**Alternativas consideradas:**
+
+- **Chamada direta do método na entidade:** seria uma solução mais simples, mas manteria a solicitação diretamente acoplada à operação executada.
+- **Implementação de todas as operações diretamente no serviço:** concentraria diferentes comportamentos na classe `OrdemServicoService`, aumentando suas responsabilidades.
+- **State:** já foi utilizado pelo grupo no módulo de Reserva e tem como objetivo organizar comportamentos que variam conforme o estado de um objeto. No módulo de Manutenção, o objetivo é encapsular uma solicitação específica como um objeto.
+
+### Participantes mapeados para o código
+
+| Participante GoF | Classe no sistema |
+|---|---|
+| Command | `Command` |
+| ConcreteCommand | `ConcluirOrdemServicoCommand` |
+| Receiver | `OrdemServico` |
+| Client/Invoker | `OrdemServicoService` |
+
+A classe abstrata `Command` define o contrato `execute()`. A classe `ConcluirOrdemServicoCommand` implementa esse contrato e mantém uma referência à ordem de serviço que receberá a operação.
+
+O `OrdemServicoService` atua como responsável pela criação e execução do comando. Já a entidade `OrdemServico` é o Receiver: ela executa a regra de negócio de conclusão e valida se a transição de status é permitida.
+
+### Diagrama de classes
+
+```mermaid
+classDiagram
+    class Command {
+        <<abstract>>
+        +execute() OrdemServico
+    }
+
+    class ConcluirOrdemServicoCommand {
+        -ordem_servico: OrdemServico
+        +execute() OrdemServico
+    }
+
+    class OrdemServico {
+        +id_ordem: str
+        +status: OrdemServicoStatus
+        +concluir()
+    }
+
+    class OrdemServicoService {
+        -repository: AbstractRepository
+        +concluir_ordem_servico(id_ordem) OrdemServico
+    }
+
+    Command <|-- ConcluirOrdemServicoCommand
+    ConcluirOrdemServicoCommand --> OrdemServico : solicita conclusão
+    OrdemServicoService ..> ConcluirOrdemServicoCommand : cria e executa
+```
+
+### Testes que exercitam o padrão
+
+`src/biblioteca/manutencao/tests/unit/test_manutencao.py`:
+
+- `test_concluir_ordem_servico_com_command`: verifica se o comando executa corretamente a conclusão de uma ordem de serviço que está em execução.
+- `test_command_nao_concluir_ordem_que_nao_esta_em_execucao`: verifica se o comando respeita a regra de negócio da entidade e lança `ValueError` quando a ordem ainda está aberta.
+
+Execução local: `python -m pytest src/biblioteca/manutencao` → **12 testes passaram**.
+
+### Custo da aplicação do padrão
+
+O padrão adiciona uma classe abstrata (`Command`) e uma classe concreta (`ConcluirOrdemServicoCommand`), além de uma camada de indireção entre o serviço e a entidade. Isso aumenta a quantidade de classes e exige que o desenvolvedor compreenda o fluxo entre serviço, comando e Receiver.
+
+Nesta implementação, o padrão foi aplicado especificamente à operação de conclusão da ordem de serviço. As demais operações do serviço continuam sendo executadas diretamente.
+
+O custo compensa porque a solicitação de conclusão passa a ser representada por um objeto independente, seguindo uma estrutura que permite adicionar novos comandos para outras operações sem concentrar todas as solicitações em uma única classe.

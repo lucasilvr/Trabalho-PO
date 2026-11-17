@@ -32,8 +32,7 @@ def ordem_servico(laudo_reparavel):
     def criar(id_ordem: str):
         return model.OrdemServico(
             id_ordem=id_ordem,  
-            laudo=laudo_reparavel,
-            exemplar_disponivel=True
+            laudo=laudo_reparavel
         )
 
     return criar

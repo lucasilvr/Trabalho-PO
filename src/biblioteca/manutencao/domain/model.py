@@ -26,12 +26,8 @@ class OrdemServico:
     def __init__(
         self,
         id_ordem: str,
-        laudo: LaudoAvaliacao,
-        exemplar_disponivel: bool
+        laudo: LaudoAvaliacao
     ):
-        if not exemplar_disponivel:
-            raise ValueError("Não é possível criar uma ordem de serviço sem um exemplar disponível.")
-
         if not laudo.reparavel:
             raise ValueError("Não é possível criar uma ordem de serviço para um dano não reparável.")
         

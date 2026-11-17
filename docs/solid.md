@@ -355,6 +355,112 @@ class FakeMultaRepository(AbstractMultaRepository):
 
 O custo compensa porque unifica o contrato entre os repositórios real e *fake* (atendendo ao LSP), desacopla a API Flask de erros genéricos ou de infraestrutura (atendendo ao DIP) e torna as respostas da API previsíveis e alinhadas ao padrão de erros adotado pelos demais agregados da biblioteca.
 
+## Karine Vitória Marinho de Moraes — Manutenção e Conservação do Acervo
+
+### Princípio violado
+
+- **Single Responsibility Principle (SRP):** A classe `OrdemServico` possuía a responsabilidade de validar tanto as condições do laudo de avaliação quanto a disponibilidade do exemplar para manutenção. Entretanto, a disponibilidade é uma informação relacionada ao agregado Acervo, enquanto a validação da reparabilidade pertence ao contexto de Manutenção.
+
+### Código antes
+
+Comportamento presente no commit `4da1b30` (29/09/2026), anterior a 06/10/2026:
+
+```python
+# src/biblioteca/manutencao/domain/model.py
+
+class OrdemServico:
+    def __init__(
+        self,
+        id_ordem: str,
+        laudo: LaudoAvaliacao,
+        exemplar_disponivel: bool
+    ):
+        if not exemplar_disponivel:
+            raise ValueError(
+                "Não é possível criar uma ordem de serviço sem um exemplar disponível."
+            )
+
+        if not laudo.reparavel:
+            raise ValueError(
+                "Não é possível criar uma ordem de serviço para um dano não reparável."
+            )
+
+        self.id_ordem = id_ordem
+        self.laudo = laudo
+        self.status = OrdemServicoStatus.ABERTA
+```
+
+### Problema concreto
+
+A entidade `OrdemServico` concentrava validações relacionadas a duas responsabilidades distintas: as condições necessárias para a manutenção e a disponibilidade do exemplar no Acervo.
+
+Isso gerava acoplamento entre os agregados, pois uma mudança nas regras de disponibilidade do Acervo poderia exigir alterações na entidade `OrdemServico`, mesmo que as regras próprias da manutenção permanecessem iguais.
+
+### Refatoração
+
+Commit "depois": `5e0d902`.
+
+A refatoração consistiu em transferir a validação da disponibilidade do exemplar para a camada `service_layer`, mantendo na entidade `OrdemServico` apenas a validação relacionada à reparabilidade do dano.
+
+No arquivo `src/biblioteca/manutencao/domain/model.py`, o construtor passou a receber apenas o identificador da ordem e o laudo:
+
+```python
+class OrdemServico:
+    def __init__(
+        self,
+        id_ordem: str,
+        laudo: LaudoAvaliacao
+    ):
+        if not laudo.reparavel:
+            raise ValueError(
+                "Não é possível criar uma ordem de serviço para um dano não reparável."
+            )
+
+        self.id_ordem = id_ordem
+        self.laudo = laudo
+        self.status = OrdemServicoStatus.ABERTA
+```
+
+No arquivo `src/biblioteca/manutencao/service_layer/services.py`, a verificação de disponibilidade passou a acontecer antes da criação da entidade:
+
+```python
+def criar_ordem_servico(
+    self,
+    id_ordem: str,
+    laudo: model.LaudoAvaliacao,
+    exemplar_disponivel: bool
+) -> model.OrdemServico:
+
+    if not exemplar_disponivel:
+        raise ValueError(
+            "Não é possível criar uma ordem de serviço sem um exemplar disponível."
+        )
+
+    ordem_servico = model.OrdemServico(
+        id_ordem=id_ordem,
+        laudo=laudo
+    )
+
+    self.repository.add(ordem_servico)
+
+    return ordem_servico
+```
+
+### Como os testes garantiram o comportamento
+
+Após a refatoração, foram executados os testes do agregado de Manutenção, totalizando 10 testes aprovados em 0,10 segundos.
+
+- **Testes unitários:** verificaram a criação de ordens de serviço e a rejeição de laudos associados a danos não reparáveis.
+- **Testes de integração:** verificaram a persistência, recuperação e listagem das ordens de serviço e seus respectivos laudos.
+- **Testes E2E:** verificaram o funcionamento dos serviços e da API após a alteração.
+
+A aprovação de toda a suíte demonstrou que a refatoração não provocou regressões nos comportamentos já existentes.
+
+### Custo da refatoração
+
+A alteração exigiu modificar a assinatura do construtor de `OrdemServico` e atualizar os pontos do código que criavam essa entidade. A validação de disponibilidade passou a ser responsabilidade da camada de serviço, que agora concentra essa verificação antes de solicitar a criação da ordem.
+
+O custo da mudança foi pequeno, pois não exigiu a criação de novas classes ou estruturas. A alteração compensa por separar as responsabilidades dos agregados e reduzir o acoplamento entre Manutenção e Acervo.
 
 ## Isabella Vieira da Motta — Leitores
 
@@ -437,7 +543,6 @@ class Leitor:
 ```
 
 ### Como os testes garantiram o comportamento
-
 - **Preservação da suíte existente:** Os testes E2E e de repositório continuaram passando, validando o mapeamento ORM sem quebrar com a nova lista de observadores.
 - **Novos testes unitários de OCP:** O `MockEmailObserver` em `test_leitor_observer.py` validou a alteração de estado externo após a notificação de inativação.
 - **Validação de SRP:** Testes unitários focados na `CategoriaLeitor` garantiram a checagem isolada de limites.

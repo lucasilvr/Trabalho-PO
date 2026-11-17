@@ -225,6 +225,42 @@ Mantive `SemTolerancia` como política padrão e passei a persistir `categoria_l
 
 Utilizei IA generativa para comparar Strategy com condicionais na entidade, Template Method e Decorator, para organizar o rascunho de `docs/gof.md` e desta subseção e para revisar a implementação. A revisão apontou que a política não sobrevivia ao reload; corrigi o desenho persistindo a categoria, verifiquei o diagrama contra as classes implementadas e executei as suítes de unidade, integração e E2E. A escolha do padrão e a responsabilidade pelo resultado final são minhas.
 
+### Fase 2 — Entrega
+
+#### Implementação
+
+17 - 11 - 2026
+
+`fa10fc0` — docs: adiciona frameworks e retrospectiva da entrega final (commit que acompanha esta subseção)
+
+Redigi `docs/frameworks.md`, com o papel de Flask, SQLAlchemy e pytest na solução, a camada em que cada um aparece, a verificação de que o domínio não os importa, quatro pontos de inversão de controle localizados no código (registro de rotas, contexto de requisição, mapeamento ORM e fixtures do pytest), oito padrões que os frameworks usam internamente e a comparação com Django. Redigi também `docs/retrospectiva.md`, retomando as previsões do checkpoint 1, confrontando-as com as evidências da Fase 2 e registrando a decisão final de manter a arquitetura com dois ajustes.
+
+#### Arquivos
+
+- `docs/frameworks.md`
+- `docs/retrospectiva.md`
+- `DECISIONS.md`
+
+#### Testes
+
+17 - 11 - 2026
+
+Executei as três suítes antes de escrever: 63 testes unitários, 15 de integração e 20 E2E, todos passando. Também confirmei por `git grep` que nenhum arquivo de domínio importa Flask, SQLAlchemy ou pytest. A `main` estava com a CI verde no commit `00cfbbb` quando comecei a documentação.
+
+#### Decisão de projeto
+
+17 - 11 - 2026
+
+Escrevi a análise dos frameworks a partir de ocorrências reais no código do grupo — a rota em `flask_app.py`, o `map_imperatively` em `orm.py` e a fixture `client` nos testes E2E — em vez de descrever os frameworks em abstrato, porque o enunciado pede que os pontos de inversão de controle e os padrões sejam localizados no código do próprio grupo. A mesma escolha guiou a retrospectiva, que usa commits, testes e incidentes do repositório como evidência, e não impressões genéricas.
+
+#### Uso de IA
+
+Utilizei IA generativa para levantar os pontos de inversão de controle e os padrões internos dos frameworks, comparar o efeito de uma solução Django com a arquitetura em camadas e organizar os rascunhos de `docs/frameworks.md`, `docs/retrospectiva.md` e desta subseção. Conferi cada referência de arquivo e linha no código, executei as três suítes e ajustei o texto e as conclusões; a decisão final de manter a arquitetura e a responsabilidade pelo conteúdo são minhas.
+
+#### Reflexão
+
+A Fase 2 mudou a forma como eu leio o meu próprio código. No checkpoint 2, ao procurar uma violação de LSP no Empréstimo, percebi que o problema não estava na exceção em si, mas no contrato: duas implementações do mesmo repositório reagiam de formas diferentes ao mesmo caso, e o entrypoint precisava conhecer o SQLAlchemy para traduzir o erro. Trocar isso por `ItemNaoEncontrado` foi simples justamente porque o domínio já estava isolado; a camada não atrapalhou, ela mostrou onde o acoplamento estava. No checkpoint 3, o Strategy me ensinou algo que eu não tinha previsto: um padrão pode estar correto e ainda assim não funcionar de ponta a ponta. A política era escolhida na criação e se perdia quando o item era recarregado do banco. Só descobri isso ao escrever um teste que recarregava o objeto de verdade; a correção exigiu persistir a categoria e mudou quatro camadas. Aprendi que testar o caminho real, e não só o objeto em memória, é o que separa um padrão decorativo de um padrão útil. O que eu faria diferente é o processo: integrar antes, abrir PR cedo e criar as tags na `main` no dia do prazo. Concentrei commits e merges no fim, e as tags acabaram apontando para branches individuais. Também declararia cada uso de IA no momento em que acontece.
+
 ## Karine Vitória Marinho de Moraes
 
 ### Fase 1 - Checkpoint 1

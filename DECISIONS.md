@@ -395,16 +395,11 @@ Documentei, em conjunto com a Ana Laura, as decisões arquiteturais dos módulos
 
 #### Observação sobre a autoria dos ADRs
 
-Os ADRs do checkpoint 1 dos módulos de Acervo e de Penalidades foram escritos por mim
-e pela Ana Laura trabalhando juntos. Na hora de commitar, os arquivos acabaram
-invertidos: cada um commitou o ADR do módulo do outro.
+Os ADRs do checkpoint 1 dos módulos de Acervo e de Penalidades foram escritos por mim e pela Ana Laura trabalhando juntos. Na hora de commitar, os arquivos acabaram invertidos: cada um commitou o ADR do módulo do outro.
 
-- `docs/adr/0002-modelagem-livro-exemplar.md` (Acervo, meu módulo): commitado pela
-  Ana Laura em `fed5d51` (23/10/2026). Depois, no meu commit `9054433` (29/10/2026),
-  conferi o texto com a implementação do Acervo, confirmei o status como "Aceita" e
-  removi a observação que pedia essa conferência.
-- `docs/adr/0003-api-flask-multas.md` (Penalidades, módulo da Ana Laura): commitado
-  por mim em `9054433` (29/10/2026).
+- `docs/adr/0002-modelagem-livro-exemplar.md` (Acervo, meu módulo): commitado pela Ana Laura em `fed5d51` (23/10/2026). Depois, no meu commit `9054433` (29/10/2026),
+conferi o texto com a implementação do Acervo, confirmei o status como "Aceita" e removi a observação que pedia essa conferência.
+- `docs/adr/0003-api-flask-multas.md` (Penalidades, módulo da Ana Laura): commitado por mim em `9054433` (29/10/2026).
 
 Como o conteúdo foi produzido em conjunto, considero o ADR 0002 como o do meu módulo.
 
@@ -901,23 +896,35 @@ Consertei o `FakeMultaRepository`, construí o service para orquestrar a baixa d
 
 #### Implementação
 
-22 - 10 - 2026
+23 - 10 - 2026
 
-Documentei uma decisão arquitetural relacionada ao módulo Acervo, considerando a representação de livros e exemplares e a separação entre domínio e persistência. O ADR registra o contexto da decisão, as alternativas consideradas e suas consequências para a manutenção e evolução do módulo.
+`fed5d51` — docs: adiciona adr do acervo e registra decisions
+
+Documentei, em conjunto com o Lucas, as decisões arquiteturais dos módulos de Acervo (`docs/adr/0002-modelagem-livro-exemplar.md`) e de Penalidades (`docs/adr/0003-api-flask-multas.md`). No commit `fed5d51`, adicionei o arquivo `0002-modelagem-livro-exemplar.md`.
+
+#### Observação sobre a autoria dos ADRs
+
+Os ADRs do checkpoint 1 dos módulos de Penalidades e de Acervo foram escritos por mim e pelo Lucas trabalhando juntos. Na hora de commitar, os arquivos acabaram invertidos: cada um commitou o ADR do módulo do outro.
+
+- `docs/adr/0003-api-flask-multas.md` (Penalidades, meu módulo): commitado pelo Lucas em `9054433` (29/10/2026).
+- `docs/adr/0002-modelagem-livro-exemplar.md` (Acervo, módulo do Lucas): commitado por mim em `fed5d51` (23/10/2026) e depois revisado pelo Lucas em `9054433`.
+
+Como o conteúdo foi produzido em conjunto, considero o ADR 0003 como o do meu módulo.
 
 #### Arquivos
 
 - `docs/adr/0002-modelagem-livro-exemplar.md`
+- `DECISIONS.md`
 
 #### Testes
 
-22 - 10 - 2026
+23 - 10 - 2026
 
 Conferi a decisão documentada em relação à implementação existente do Acervo e às verificações automatizadas do projeto.
 
 #### Decisão de projeto
 
-22 - 10 - 2026
+23 - 10 - 2026
 
 A decisão documentada considera como a organização das entidades Livro e Exemplar representa o domínio e como a separação das responsabilidades afeta a manutenção e a evolução do Acervo.
 
@@ -1017,6 +1024,35 @@ Optei pelo padrão Decorator para permitir a composição cumulativa e dinâmica
 
 Utilizei IA generativa para gerar a sintaxe do diagrama de classes em Mermaid e estruturar o texto no `docs/gof.md`. Testei o código e validei os cenários com pytest.
 
+---
+
+### Fase 2 — Entrega
+
+#### Implementação
+
+17 - 11 - 2026
+`<HASH_RETROSPECTIVA>` — docs(retrospectiva): adiciona evidencias e trade-offs do modulo de multas
+
+Complementei o documento `docs/retrospectiva.md` inserindo as evidências práticas do módulo de Multas nas análises de modificabilidade, refatorações SOLID (`6f219b0` e `a705916`) e composição do padrão Decorator (`1fece2f`). Também atualizei o `DECISIONS.md` com o esclarecimento de autoria do ADR 0002 (`fed5d51` e `9054433`) e a reflexão final da Fase 2.
+
+#### Arquivos
+
+- `docs/retrospectiva.md`
+- `DECISIONS.md`
+
+#### Decisão de projeto
+
+17 - 11 - 2026
+
+Optamos na retrospectiva final por manter a arquitetura em camadas com Repository Pattern e Service Layer, recomendando como evoluções a injeção explícita da fábrica de repositórios na composição e o compartilhamento de fixtures de mapeamento ORM para reduzir a repetição entre agregados.
+
+#### Uso de IA
+
+Utilizei IA generativa para revisar a coerência textual das inserções em `docs/retrospectiva.md` e estruturar esta subseção do `DECISIONS.md`. Todos os hashes de commits, evidências técnicas do módulo de Multas e a reflexão final foram conferidos e validados por mim no repositório.
+
+#### Reflexão
+
+Ao longo da Fase 2, pude enxergar o código desenvolvido na Fase 1 sob uma perspectiva arquitetural muito mais crítica. Na primeira etapa, o foco estava em fazer os testes passarem e isolar o domínio usando mapeamento imperativo e repositórios; já nesta fase, percebi na prática como abstrações mal definidas cobram seu preço. A refatoração de SOLID no módulo de Multas mostrou que retornar valores nulos ou vazar exceções do SQLAlchemy quebrava a substituibilidade entre repositórios e acoplava a API Flask à infraestrutura. Da mesma forma, aplicar o padrão Decorator para calcular juros de mora e taxas administrativas evidenciou como a composição permite estender regras de negócio sem inflar a entidade principal com condicionais. Por outro lado, ficou claro o custo dessa arquitetura em camadas para um domínio relativamente simples: cada pequena evolução exige tocar múltiplos arquivos entre domínio, adaptadores, serviços e testes. Se começasse o projeto novamente, manteria a separação entre domínio e persistência nas regras financeiras críticas, mas evitaria camadas intermediárias desnecessárias nos fluxos puramente cadastrais. Além disso, eu padronizaria desde o início as exceções de domínio, os nomes dos arquivos de teste e a configuração de e-mail do Git, garantindo um histórico limpo, rastreável e com a suíte automatizada sempre verde desde os primeiros commits.
 ## Isabella Vieira da Motta
 
 ### Fase 1 — Checkpoint 1

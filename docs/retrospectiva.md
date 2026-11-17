@@ -26,11 +26,12 @@ unitários, 15 de integração e 20 E2E, e a CI executa cada uma em um passo pr�
 sem imports de Flask e SQLAlchemy, o que permitiu refatorações localizadas: `Livro` teve
 `inativar()` dividido em validação e mutação; `Reserva` teve o prazo fixo transformado em
 atributo; `Leitor` teve a regra de limites separada da entidade; `OrdemServico` deixou de
-validar disponibilidade de outro agregado. Em todos esses casos, a mudança ficou no
-domínio ou no serviço. Porém, a previsão de que "uma operação toca várias camadas" também
-se confirmou: ao acrescentar `categoria_leitor` ao empréstimo, foram necessários domínio,
-mapeamento ORM, serviço, entrypoint e quatro arquivos de teste. A camada não atrapalhou,
-mas cobrou o pedágio previsto.
+validar disponibilidade de outro agregado; e `Multa` passou a compor juros de mora e taxa
+administrativa via decoradores (`1fece2f`) sem alterar o mapeamento ORM nem a rota HTTP.
+Em todos esses casos, a mudança ficou no domínio ou no serviço. Porém, a previsão de que
+"uma operação toca várias camadas" também se confirmou: ao acrescentar `categoria_leitor` ao
+empréstimo, foram necessários domínio, mapeamento ORM, serviço, entrypoint e quatro
+arquivos de teste. A camada não atrapalhou, mas cobrou o pedágio previsto.
 
 **Custo de ligação — subestimado.** O checkpoint 1 tratou o custo como "mais arquivos e
 conceitos". Na prática, o custo maior foi a **repetição por agregado**: seis
@@ -46,7 +47,10 @@ previsto: o ciclo de vida dos mapeadores do SQLAlchemy (`start_mappers` e
 distribuída — SRP no Acervo, na Manutenção e nos Leitores; OCP na Reserva, no Acervo e nos
 Leitores; LSP e DIP no Empréstimo e nas Multas — e cada um pôde ser resolvido dentro do
 agregado, com testes na camada adequada. Sem a fronteira do repositório, a correção de LSP
-no Empréstimo teria virado uma mudança no entrypoint e nos testes de API.
+no Empréstimo teria virado uma mudança no entrypoint e nos testes de API; da mesma forma,
+nas Multas (`6f219b0` e `a705916`), padronizar `MultaNaoEncontrada` e `ValorPagamentoInvalido`
+permitiu que a rota Flask traduzisse erros de domínio para HTTP 404 e 400 sem depender de
+exceções do SQLAlchemy.
 
 **Facilitaram os padrões de projeto.** A Fase 2 terminou com seis padrões diferentes, um
 por integrante: Strategy no Empréstimo, Chain of Responsibility no Acervo, State na
@@ -60,9 +64,12 @@ foi enxertado; ele resolvia um problema concreto do agregado.
 checkpoint 1 já havia apontado isso; a Fase 2 confirmou que é o ponto mais frágil. O caso
 do Strategy mostrou o efeito: para a política de atraso sobreviver ao recarregamento do
 banco, foi preciso persistir a categoria e reconstruir a estratégia na entidade — uma
-decisão que atravessou domínio, ORM, serviço e API. Funciona, mas revela que o desenho
-"serviço escolhe a estratégia" e o desenho "entidade se reconstrói" precisam estar
-alinhados explicitamente.
+decisão que atravessou domínio, ORM, serviço e API. O mesmo ocorreu com o Decorator nas
+Multas (`1fece2f`), em que o encadeamento de encargos (`DecoradorTaxaAdministrativa` sobre
+`DecoradorJurosMora`) precisa ser montado na instanciação da entidade, enquanto o banco
+persiste apenas o `valor_total` calculado. Funciona, mas revela que o desenho "serviço
+escolhe a política" e o desenho "entidade se reconstrói" precisam estar alinhados
+explicitamente.
 
 ## 4. Trade-offs que mais pesaram
 

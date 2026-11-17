@@ -231,7 +231,7 @@ Utilizei IA generativa para comparar Strategy com condicionais na entidade, Temp
 
 17 - 11 - 2026
 
-`docs: adiciona frameworks e retrospectiva da entrega final` (commit que acompanha esta subseção)
+`fa10fc0` — docs: adiciona frameworks e retrospectiva da entrega final (commit que acompanha esta subseção)
 
 Redigi `docs/frameworks.md`, com o papel de Flask, SQLAlchemy e pytest na solução, a camada em que cada um aparece, a verificação de que o domínio não os importa, quatro pontos de inversão de controle localizados no código (registro de rotas, contexto de requisição, mapeamento ORM e fixtures do pytest), oito padrões que os frameworks usam internamente e a comparação com Django. Redigi também `docs/retrospectiva.md`, retomando as previsões do checkpoint 1, confrontando-as com as evidências da Fase 2 e registrando a decisão final de manter a arquitetura com dois ajustes.
 

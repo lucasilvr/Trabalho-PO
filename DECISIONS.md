@@ -1292,3 +1292,12 @@ Optei pelo *Observer* em detrimento do *State* para focar no desacoplamento. O O
 
 #### Uso de IA
 Utilizei o Gemini para debater a troca do padrão State para Observer e auxiliar com o mapeamento ORM. Adaptei e testei todo o código.
+
+### Fase 2 — Entrega
+
+#### Reflexão
+Nesta segunda fase do projeto, o foco mudou da simples entrega de funcionalidades para a reflexão profunda sobre arquitetura, manutenibilidade e qualidade de software. A elaboração do ADR e a análise técnica dos princípios SOLID revelaram o quanto as decisões iniciais, como o encapsulamento de regras de limite no Value Object `CategoriaLeitor` foram fundamentais para manter o domínio limpo e testável. 
+
+No entanto, o maior desafio (e aprendizado) ocorreu no Checkpoint 3, com os Padrões GoF. Inicialmente, tentei fazer a aplicação do padrão State para gerir o status do leitor. Ao perceber que a modelagem limitava o domínio, decidi refatorar o código para adotar o padrão Observer. Essa mudança prática foi essencial para consolidar o meu aprendizado na disciplina, pois me fez  compreender na prática a verdadeira essência do Princípio Aberto/Fechado (OCP). Agora, o sistema pode engatilhar qualquer evento futuro (como envio de e-mails ou cancelamento automático de reservas) quando um leitor é inativado, sem que a classe principal sofra qualquer mutação. 
+
+Essa jornada de refatoração ajudou a absorver a teoria da matéria de forma muito mais clara. Ensinou a importância de não me apegar a implementações engessadas, a alinhar a documentação com o código-fonte e a utilizar padrões de projeto não apenas como requisitos acadêmicos, mas como ferramentas reais para criar sistemas escaláveis e preparados para a evolução das regras de negócio.

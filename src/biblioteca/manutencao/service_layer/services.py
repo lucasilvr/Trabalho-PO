@@ -1,5 +1,8 @@
 from src.biblioteca.manutencao.domain import model
 from src.biblioteca.manutencao.adapters.repository import AbstractRepository
+from src.biblioteca.manutencao.service_layer.commands import (
+    ConcluirOrdemServicoCommand
+)
 
 class OrdemServicoService:
     def __init__(self, repository: AbstractRepository):
@@ -50,16 +53,15 @@ class OrdemServicoService:
     def concluir_ordem_servico(
         self,
         id_ordem: str,
-    ) -> model.OrdemServico:
+    ) -> model.OrdemServico:    
 
         ordem_servico = self.repository.get(id_ordem)
 
         if ordem_servico is None:
             raise ValueError("Ordem de serviço não encontrada.")
 
-        ordem_servico.concluir()
-
-        return ordem_servico
+        comando = ConcluirOrdemServicoCommand(ordem_servico)
+        return comando.execute()
 
     def cancelar_ordem_servico(
         self,

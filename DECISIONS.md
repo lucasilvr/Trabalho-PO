@@ -523,12 +523,13 @@ Os commits deste checkpoint foram integrados à `main` pelo PR #17 (`7325449`, 1
 #### Implementação
 
 17 - 11 - 2026
-`docs(acervo): padroniza solid.md e finaliza autorrelato da Fase 2 no DECISIONS` (commit que acompanha esta subseção)
+`docs(acervo): padroniza solid.md e finaliza autorrelato da Fase 2 no DECISIONS` e `docs(acervo): complementa analise de frameworks com exemplos do Acervo` (commits que acompanham esta subseção)
 
-Padronizei a seção do agregado de Acervo em `docs/solid.md` para o formato unificado do documento (`## Lucas Dias Silveira — Acervo`, mantendo o título geral `# Refatorações SOLID — Fase 2` no topo e incluindo os hashes de antes e depois, trechos de código, testes e custo da refatoração), complementei a seção do Acervo em `docs/gof.md` e `docs/adr/0002-modelagem-livro-exemplar.md`, e finalizei todas as subseções da Fase 2 (incluindo o esclarecimento sobre a autoria dos ADRs nos commits `fed5d51` e `9054433`, os relatos dos checkpoints 2 e 3 e a reflexão final) neste `DECISIONS.md`.
+Em conjunto com a Sandy, contribuí em `docs/frameworks.md` localizando no agregado de Acervo o papel de Flask, SQLAlchemy e pytest, os pontos de inversão de controle (extração do parâmetro `<isbn>` nas rotas Flask, instrumentação `_sa_class_manager` e mapeamento imperativo `1:N` entre `Livro` e `Exemplar` no SQLAlchemy, fixture `session` com `clear_mappers()` e `@pytest.mark.parametrize` no pytest), os padrões internos usados pelos frameworks (Decorator, Registry, Strategy, Unit of Work / Factory Method, Proxy e Template Method) e os impactos que o uso do Django traria para o modelo de domínio do Acervo. Além disso, padronizei a seção do agregado de Acervo em `docs/solid.md` para o formato unificado do documento (`## Lucas Dias Silveira — Acervo`, mantendo o título geral `# Refatorações SOLID — Fase 2` no topo e incluindo os hashes de antes e depois, trechos de código, testes e custo da refatoração), complementei a seção do Acervo em `docs/gof.md` e `docs/adr/0002-modelagem-livro-exemplar.md`, e finalizei todas as subseções da Fase 2 (incluindo o esclarecimento sobre a autoria dos ADRs nos commits `fed5d51` e `9054433`, os relatos dos checkpoints 2 e 3 e a reflexão final) neste `DECISIONS.md`.
 
 #### Arquivos
 
+- `docs/frameworks.md`
 - `DECISIONS.md`
 - `docs/solid.md`
 - `docs/gof.md`
@@ -544,7 +545,7 @@ Executei as três suítes de testes configuradas na CI (`unit`, `integration` e 
 
 17 - 11 - 2026
 
-Padronizei a documentação de SOLID e GoF do módulo de Acervo seguindo a mesma estrutura das demais seções do grupo, garantindo que os hashes dos commits de antes e depois e a explicação sobre a autoria cruzada dos ADRs no Checkpoint 1 fiquem explícitos para conferência no histórico do Git.
+Padronizei a documentação de SOLID e GoF do módulo de Acervo seguindo a mesma estrutura das demais seções do grupo, garantindo que os hashes dos commits de antes e depois e a explicação sobre a autoria cruzada dos ADRs no Checkpoint 1 fiquem explícitos para conferência no histórico do Git, e documentei em `docs/frameworks.md` os pontos concretos de inversão de controle e padrões internos que ocorrem nos adapters, entrypoints e testes do Acervo.
 
 #### Uso de IA
 

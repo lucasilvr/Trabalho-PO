@@ -862,9 +862,21 @@ docs(reservas): registra autorrelato da entrega final (commit que acompanha esta
 
 Acrescentei a subseção do checkpoint 1, a declaração de uso de IA da Fase 1, as referências de integração dos checkpoints 2 e 3 e esta subseção.
 
+17 - 11 - 2026
+Ajustes finais antes da entrega:
+
+- `8c08ce5` — docs(reservas): ajusta declaracoes de uso de IA e reflexao no DECISIONS. Corrigi as declarações de uso de IA dos checkpoints 2 e 3 para descrever com exatidão o que foi feito com o Claude e reescrevi trechos da reflexão.
+- `571092d` — test(reservas): verifica persistencia dos estados da Reserva no banco. Dois testes de integração mostram que uma reserva carregada do banco volta ao estado correto do padrão State e que as transições são gravadas na coluna `status`.
+- `5f412bb` — docs: remove titulos duplicados do gof.md, que tinham sobrado dos merges.
+- `f4be9e6` — docs: adiciona ADR sobre a estrutura do pacote por agregado (`docs/adr/0007-estrutura-por-agregado.md`), registrando por que o grupo repete as camadas do Apêndice B dentro de cada agregado.
+- `dc3405b` — docs: adiciona estrutura do repositorio e execucao dos testes ao README.
+
 #### Arquivos
 
 - `docs/adr/0005-persistencia-reserva-pela-fila-espera.md`
+- `docs/adr/0007-estrutura-por-agregado.md`
+- `docs/gof.md`
+- `src/biblioteca/reservas/tests/integration/test_reserva_repository.py`
 - `README.md`
 - `DECISIONS.md`
 
@@ -877,6 +889,8 @@ Optei por não apagar nem recriar as tags dos checkpoints 2 e 3. Qualquer commit
 #### Uso de IA
 
 Utilizei o Claude para levantar no histórico os horários de merge de cada pull request, redigir a nota do grupo sobre as tags, montar a tabela do `README.md` e redigir os rascunhos desta subseção e do parágrafo de reflexão, que revisei e ajustei. Sou responsável pelo resultado final.
+
+Nos ajustes finais de 17/11, também utilizei o Claude para escrever os dois testes de integração do padrão State, redigir o ADR 0007 e as seções novas do `README.md`, remover os títulos duplicados do `docs/gof.md` e corrigir as declarações de uso de IA dos checkpoints 2 e 3. Revisei as alterações e rodei a suíte de testes antes dos commits.
 
 #### Reflexão
 

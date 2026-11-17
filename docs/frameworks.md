@@ -35,6 +35,16 @@ criada e devolve a aplicação configurada. Os três endpoints são:
 - `@app.post("/emprestimos/<id_item>/devolucao")`;
 - `@app.get("/emprestimos/<id_item>/atraso")`.
 
+No agregado Acervo (`src/biblioteca/acervo/entrypoints/flask_app.py`), a aplicação expõe
+os endpoints de catálogo:
+
+- `@app.route("/livros", methods=["POST"])` (`flask_app.py:14`) — lê `request.json`,
+  delega a criação e validação para `services.adicionar_livro(...)` e devolve HTTP 201;
+- `@app.route("/livros/<isbn>/inativar", methods=["POST"])` (`flask_app.py:28`) — recebe
+  o `<isbn>` extraído da rota pelo Flask, chama `services.inativar_livro(isbn, repo, session)`
+  e traduz erros de busca (`ValueError` → HTTP 404) e de regra de negócio (`Exception` →
+  HTTP 400) em respostas JSON com `jsonify`.
+
 ### Por que o domínio não depende do Flask
 
 O domínio não importa Flask em nenhum arquivo. A verificação é direta:
@@ -47,7 +57,10 @@ O único resultado é um **comentário** em `emprestimo/domain/model.py` que men
 SQLAlchemy; não há import. Já os imports de Flask aparecem somente nos seis
 `entrypoints/flask_app.py`. Isso é consequência da direção das dependências:
 entrypoint → serviço → domínio. O domínio é Python puro (`ItemEmprestado`, `Reserva`,
-`Livro`, `Leitor`, `Multa`) e pode ser testado sem servidor HTTP.
+`Livro`, `Exemplar`, `Leitor`, `Multa`) e pode ser testado sem servidor HTTP — por
+exemplo, a regra `Livro.pode_ser_inativado()` e `Livro.inativar()` em
+`acervo/domain/model.py` é exercitada diretamente em `acervo/tests/unit/test_acervo.py`
+sem instanciar o Flask.
 
 ## 3. SQLAlchemy
 
@@ -77,8 +90,29 @@ def start_mappers():
     )
 ```
 
-Isso mantém `ItemEmprestado` como uma classe comum e permite que o mesmo domínio seja
-testado com um repositório em memória. Além disso, o repositório traduz a exceção do
+No agregado Acervo (`src/biblioteca/acervo/adapters/orm.py:31-46`), o mapeamento
+imperativo também liga a raiz de agregado `Livro` e a entidade interna `Exemplar` às
+tabelas `livros` e `exemplares`, configurando o relacionamento `1:N` externamente sem
+que `Livro` ou `Exemplar` importem qualquer classe do SQLAlchemy:
+
+```python
+# src/biblioteca/acervo/adapters/orm.py:37-46
+linhas_mapper = mapper_registry.map_imperatively(model.Exemplar, exemplares)
+mapper_registry.map_imperatively(
+    model.Livro,
+    livros,
+    properties={
+        "exemplares": relationship(
+            linhas_mapper,
+            collection_class=list,
+        )
+    },
+)
+```
+
+Isso mantém `ItemEmprestado`, `Livro` e `Exemplar` como classes comuns (`self.exemplares: List[Exemplar] = []` no construtor de `Livro`) e permite que o mesmo domínio seja
+testado com um repositório em memória (`FakeRepository` e `DummySession` em
+`acervo/tests/unit/test_services_acervo.py`). Além disso, no Empréstimo o repositório traduz a exceção do
 framework para uma exceção de domínio: `SqlAlchemyRepository.get` converte
 `NoResultFound` em `ItemNaoEncontrado` (`repository.py:42-43`), de modo que a camada HTTP
 não precisa importar nada do SQLAlchemy.
@@ -91,9 +125,9 @@ O pytest não faz parte da aplicação em execução; ele é a infraestrutura de
 suíte é dividida em três camadas, e a CI executa cada uma separadamente
 (`.github/workflows/ci.yml`):
 
-- `tests/unit` — domínio e serviços com `FakeRepository`;
-- `tests/integration` — repositórios e mapeamento com SQLite em memória;
-- `tests/e2e` — a API pelo cliente de testes do Flask.
+- `tests/unit` — domínio, validadores e serviços com `FakeRepository` (por exemplo, `acervo/tests/unit/test_acervo.py`, `test_services_acervo.py` e `test_validators.py`);
+- `tests/integration` — repositórios e mapeamento com SQLite em memória (por exemplo, `acervo/tests/integration/test_repository.py` e `emprestimo/tests/integration/test_emprestimo_orm.py`);
+- `tests/e2e` — a API pelo cliente de testes do Flask (por exemplo, `acervo/tests/e2e/test_api.py` e `emprestimo/tests/e2e/test_emprestimo_api.py`).
 
 ### Por que o domínio não depende do pytest
 
@@ -108,23 +142,31 @@ de teste, não no modelo.
 Inversão de controle (IoC) significa que **o framework chama o nosso código**, e não o
 contrário. Localizamos quatro pontos concretos.
 
-### 5.1 Registro de rotas (Flask)
+### 5.1 Registro de rotas e injeção de parâmetros de URL (Flask)
 
 ```python
 # src/biblioteca/emprestimo/entrypoints/flask_app.py:32
 @app.post("/emprestimos")
 def registrar_emprestimo():
     ...
+
+# src/biblioteca/acervo/entrypoints/flask_app.py:28
+@app.route("/livros/<isbn>/inativar", methods=["POST"])
+def inativar_livro(isbn):
+    ...
 ```
 
 O decorador não executa a view: ele registra a função no mapa de URLs da aplicação.
-Quem chama `registrar_emprestimo()` em produção é o Flask, quando chega uma requisição
-`POST /emprestimos`. O nosso código nunca faz essa chamada diretamente — nos testes E2E
-quem dispara é `client.post(...)`.
+Quem chama `registrar_emprestimo()` ou `inativar_livro(isbn)` em produção é o Flask,
+quando chega uma requisição `POST /emprestimos` ou `POST /livros/<isbn>/inativar`
+(extraindo o segmento `<isbn>` da URL e passando-o como argumento para a função). O nosso
+código nunca faz essa chamada diretamente — nos testes E2E quem dispara é
+`client.post(...)`.
 
 ### 5.2 Ciclo de vida da requisição (Flask)
 
-`request.get_json()`, `request.args` e `jsonify()` dependem do contexto de requisição que
+`request.get_json()` (ou `request.json` em `acervo/entrypoints/flask_app.py:18`),
+`request.args` e `jsonify()` dependem do contexto de requisição que
 o Flask cria e destrói. A view não recebe esses objetos como parâmetro; ela os encontra
 no contexto que o framework preparou. Isso é IoC: o ciclo é do framework, e o nosso
 código é chamado dentro dele.
@@ -133,12 +175,20 @@ código é chamado dentro dele.
 
 Quando uma linha é carregada, o SQLAlchemy **instancia a nossa classe** e preenche os
 atributos mapeados. Nós não escrevemos esse carregamento. A consequência aparece no
-nosso domínio: objetos reconstruídos pelo SQLAlchemy não passam pelo `__init__`, por isso
-`ItemEmprestado.politica_atraso` é uma property que reencontra a estratégia a partir da
-categoria persistida (`emprestimo/domain/model.py:24-34`). Esse detalhe só existe porque
-o framework controla a construção do objeto.
+nosso domínio em dois pontos:
 
-### 5.4 Fixtures (pytest)
+- Em Empréstimo, objetos reconstruídos pelo SQLAlchemy não passam pelo `__init__`, por isso
+  `ItemEmprestado.politica_atraso` é uma property que reencontra a estratégia a partir da
+  categoria persistida (`emprestimo/domain/model.py:24-34`).
+- Em Acervo, o SQLAlchemy injeta o gerenciador `_sa_class_manager` nas classes `Livro` e
+  `Exemplar` e popula a coleção `livro.exemplares` ao carregar do banco; por isso
+  `start_mappers()` (`acervo/adapters/orm.py:32-35`) precisa verificar
+  `getattr(model.Livro, "_sa_class_manager", None)` para não instrumentar a classe duas
+  vezes entre execuções de teste.
+
+Esses detalhes só existem porque o framework controla a construção e instrumentação do objeto.
+
+### 5.4 Fixtures e parametrização (pytest)
 
 ```python
 # src/biblioteca/emprestimo/tests/e2e/test_emprestimo_api.py:9
@@ -147,12 +197,27 @@ def client():
     ...
     with app.test_client() as client:
         yield client
+
+# src/biblioteca/acervo/tests/integration/test_repository.py:8
+@pytest.fixture
+def session():
+    engine = create_engine("sqlite:///:memory:")
+    orm.metadata.create_all(engine)
+    clear_mappers()
+    orm.start_mappers()
+    yield sessionmaker(bind=engine)()
+    clear_mappers()
 ```
 
-O teste declara `def test_api_registra_emprestimo(client)`, mas não chama `client()`: o
-pytest descobre a fixture pelo nome, executa o setup, injeta o valor e só então chama a
-função de teste. O mesmo vale para as fixtures `in_memory_db` e `session` em
-`cadastro/tests/conftest.py` e `multas/tests/conftest.py`.
+O teste declara `def test_api_registra_emprestimo(client)` ou
+`def test_repository_can_save_a_livro(session)`, mas não chama `client()` nem `session()`:
+o pytest descobre a fixture pelo nome, executa o setup (até o `yield`), injeta o valor,
+chama a função de teste e depois retoma a fixture para o teardown (como o `clear_mappers()`
+em Acervo). O mesmo vale para as fixtures `in_memory_db` e `session` em
+`cadastro/tests/conftest.py` e `multas/tests/conftest.py`, e para
+`@pytest.mark.parametrize` em `acervo/tests/unit/test_validators.py:16-28`, onde o pytest
+invoca `test_cadeia_rejeita_campo_obrigatorio_vazio(dados, mensagem)` uma vez para cada
+tupla configurada.
 
 ## 6. Framework ou biblioteca?
 
@@ -163,52 +228,57 @@ A diferença prática é a **direção da chamada**:
   (rotas, mapeamentos, fixtures) e ele executa o fluxo principal.
 
 O mesmo pacote pode se comportar das duas formas. O SQLAlchemy é biblioteca quando
-fazemos `create_engine(...)` e `session.query(...)`; é framework quando o mapper
-reconstrói uma entidade a partir de uma linha do banco. O Flask é biblioteca quando
-importamos `Flask` e montamos a aplicação em `create_app`; é framework quando o roteador
+fazemos `create_engine(...)`, `session.query(...)` e `session.execute(text(...))`; é framework quando o mapper
+reconstrói uma entidade (e suas coleções relacionadas, como `Livro.exemplares`) a partir de linhas do banco. O Flask é biblioteca quando
+importamos `Flask` e montamos a aplicação; é framework quando o roteador
 chama a view. O pytest é framework em todos os momentos relevantes: nós escrevemos testes
 e fixtures, mas quem os descobre e executa é ele.
 
 | Uso no nosso código | Quem chama quem | Classificação |
 |---|---|---|
-| `Flask(__name__)` em `create_app` | nós chamamos o Flask | biblioteca |
-| `@app.post("/emprestimos")` | Flask chama a view | framework |
-| `create_engine("sqlite:///:memory:")` | nós chamamos o SQLAlchemy | biblioteca |
-| `map_imperatively(...)` | SQLAlchemy instancia as entidades | framework |
-| `@pytest.fixture def client()` | pytest injeta e chama o teste | framework |
+| `Flask(__name__)` em `flask_app.py` | nós chamamos o Flask | biblioteca |
+| `@app.post("/emprestimos")` e `@app.route("/livros/<isbn>/inativar", ...)` | Flask chama a view | framework |
+| `create_engine("sqlite:///:memory:")` e `session.execute(text(...))` | nós chamamos o SQLAlchemy | biblioteca |
+| `map_imperatively(...)` e `relationship(...)` | SQLAlchemy instancia e popula as entidades | framework |
+| `@pytest.fixture def client()` / `def session()` e `@pytest.mark.parametrize` | pytest injeta dependências e chama o teste | framework |
 
 ## 7. Padrões de projeto que os frameworks usam internamente
 
 Os padrões abaixo são usados **pelos frameworks**, e cada um pode ser localizado no
 código do grupo.
 
-### 7.1 Decorator (Flask)
+### 7.1 Decorator (Flask e pytest)
 
-`@app.post("/emprestimos")` é um decorador que recebe a função `registrar_emprestimo`,
-registra a rota e devolve a função. O mesmo mecanismo aparece em todos os
-`entrypoints/flask_app.py`, inclusive no `@app.route(..., methods=["POST"])` de
-`multas/entrypoints/flask_app.py:15`.
+`@app.post("/emprestimos")` (`emprestimo/entrypoints/flask_app.py:32`) e
+`@app.route("/livros", methods=["POST"])` (`acervo/entrypoints/flask_app.py:14,28`) são
+decoradores que recebem a função de view (`registrar_emprestimo`, `add_livro`,
+`inativar_livro`), registram a rota no `url_map` e devolvem a função. O mesmo mecanismo aparece em todos os
+`entrypoints/flask_app.py`, além dos decoradores `@pytest.fixture` e
+`@pytest.mark.parametrize` (`acervo/tests/unit/test_validators.py:16`) no pytest.
 
 ### 7.2 Registry (SQLAlchemy)
 
-`mapper_registry = registry()` e `metadata` (`emprestimo/adapters/orm.py:7-8`) são um
+`mapper_registry = registry()` e `metadata` (`emprestimo/adapters/orm.py:7-8` e
+`acervo/adapters/orm.py:5-6`) são um
 registro: cada `Table(...)` se inscreve em `metadata` e cada `map_imperatively` inscreve a
-classe de domínio no registry. É esse registro que o framework consulta para criar o
-schema (`metadata.create_all(engine)`) e para reconstruir objetos. O Flask tem o
+classe de domínio (`ItemEmprestado`, `Livro`, `Exemplar`) no registry. É esse registro que o framework consulta para criar o
+schema (`metadata.create_all(engine)`), para limpar os mapeamentos entre testes (`mapper_registry.dispose()` em `acervo/adapters/orm.py:27-28`) e para reconstruir objetos. O Flask tem o
 equivalente em `app.url_map`, alimentado pelos decoradores de rota.
 
 ### 7.3 Strategy (roteamento do Flask/Werkzeug)
 
 O mapa de URLs escolhe, para cada requisição, qual função de view executa. Os endpoints
 `POST /emprestimos`, `POST /emprestimos/<id_item>/devolucao` e
-`GET /emprestimos/<id_item>/atraso` são algoritmos intercambiáveis selecionados pelo
+`GET /emprestimos/<id_item>/atraso` (em Empréstimo), ou `POST /livros` e
+`POST /livros/<isbn>/inativar` (em Acervo), são algoritmos intercambiáveis selecionados pelo
 roteador; a view não decide se é chamada.
 
 ### 7.4 Unit of Work (SQLAlchemy)
 
 A `Session` acumula as mudanças e decide quando emitir os comandos. No nosso código isso
-aparece em `repository.py` (`self.session.add(item)`, `self.session.query(...)`) e no
-`session.commit()` dos entrypoints. O serviço não emite SQL nem controla transação.
+aparece nos repositórios (`self.session.add(item)` em `emprestimo/adapters/repository.py` e
+`self.session.add(livro)` em `acervo/adapters/repository.py:22`) e no
+`session.commit()` chamado nos serviços (`acervo/service_layer/services.py:20,35`) ou entrypoints. Em `acervo/entrypoints/flask_app.py:12`, `get_session = sessionmaker(bind=engine)` usa ainda o padrão **Factory Method** do SQLAlchemy para fabricar uma nova unidade de trabalho (`Session`) a cada requisição.
 
 ### 7.5 Identity Map (SQLAlchemy)
 
@@ -220,16 +290,16 @@ identity map, esse cuidado seria desnecessário.
 
 ### 7.6 Proxy (SQLAlchemy)
 
-Os atributos mapeados são descritores instrumentados: ao ler ou atribuir um campo, o
-SQLAlchemy registra a mudança para o flush. A classe de domínio não contém esse código;
+Os atributos mapeados são descritores instrumentados (`_sa_class_manager`): ao ler ou atribuir um campo (ou ao acessar a coleção `livro.exemplares` configurada via `relationship` em `acervo/adapters/orm.py:42-45`), o
+SQLAlchemy intercepta o acesso e registra a mudança para o flush. A classe de domínio não contém esse código;
 ele é gerado pelo mapeamento em `adapters/orm.py`.
 
 ### 7.7 Template Method (pytest)
 
 O pytest define o esqueleto de coleta, setup, execução e teardown, e nós preenchemos
 pontos variáveis: o nome `test_*`, os arquivos `conftest.py` e as fixtures. Em
-`test_emprestimo_api.py`, o `yield` da fixture marca exatamente a fronteira entre setup e
-teardown que o framework controla.
+`test_emprestimo_api.py` (fixture `client`) e em `acervo/tests/integration/test_repository.py:8-15` (fixture `session`), o `yield` da fixture marca exatamente a fronteira entre setup (`create_all`, `start_mappers`) e
+teardown (`clear_mappers`) que o framework controla.
 
 ### 7.8 Composite (pytest)
 
@@ -244,17 +314,23 @@ autenticação, migrações e configuração global no mesmo pacote. Usá-lo mud
 estruturais do projeto:
 
 1. **Domínio acoplado.** As entidades herdariam de `models.Model`. `ItemEmprestado`,
-   `Reserva` e `Livro` passariam a depender do framework, e a verificação
+   `Reserva`, `Livro` e `Exemplar` passariam a depender do framework, e a verificação
    `git grep` que hoje mostra o domínio limpo deixaria de valer. O mapeamento explícito
-   de `adapters/orm.py` desapareceria em favor de campos declarados na própria classe.
+   de `adapters/orm.py` desapareceria em favor de campos declarados na própria classe
+   (por exemplo, no Acervo, `self.exemplares: List[Exemplar] = []` deixaria de ser uma
+   lista Python pura e viraria um `models.ForeignKey(Livro, related_name="exemplares")`
+   atrelado ao `RelatedManager` do Django).
 2. **Persistência via QuerySet.** Não haveria `AbstractRepository` nem
    `SqlAlchemyRepository`. O acesso seria por `Model.objects.filter(...)`, e o
-   `FakeRepository` usado nos testes de unidade precisaria ser substituído por mocks ou
-   por um banco de teste. A refatoração de LSP/DIP do checkpoint 2 (contrato único de
-   `ItemNaoEncontrado`) teria de ser repensada no vocabulário do Django.
+   `FakeRepository` usado nos testes de unidade (`test_services_acervo.py`,
+   `test_services_emprestimo.py`) precisaria ser substituído por mocks ou
+   por um banco de teste. A refatoração de LSP/DIP do checkpoint 2 em Empréstimo (contrato
+   único de `ItemNaoEncontrado`) e a checagem em memória `Livro.pode_ser_inativado()` em
+   Acervo teriam de ser repensadas no vocabulário de `DoesNotExist` e `QuerySet` do Django.
 3. **Roteamento e views.** As rotas sairiam dos decoradores e iriam para `urls.py`,
    apontando para views baseadas em função ou classe. Para JSON seria comum adicionar o
-   Django REST Framework, mais uma dependência.
+   Django REST Framework, mais uma dependência (onde o *Chain of Responsibility* de
+   `ValidadorCampoLivro` no Acervo disputaria espaço com `Serializer` ou `Model.clean()`).
 4. **Configuração e testes.** Entrariam `settings.py`, `manage.py`, `INSTALLED_APPS` e
    migrações geradas. Os testes precisariam de `pytest-django` e da fixture `db`, e o
    SQLite em memória montado à mão daria lugar ao banco de teste do Django.

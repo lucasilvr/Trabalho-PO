@@ -748,7 +748,7 @@ Escolhi registrar no ADR a decisão de não criar um repositório para a `Reserv
 
 #### Uso de IA
 
-Utilizei o Claude (Claude Code) para redigir o ADR a partir da decisão descrita no meu autorrelato do checkpoint 2 da Fase 1. Revisei o texto e sou responsável pelo conteúdo.
+Utilizei o Claude para redigir o ADR a partir da decisão descrita no meu autorrelato do checkpoint 2 da Fase 1. Revisei o texto e sou responsável pelo conteúdo.
 
 ### Fase 2 — Checkpoint 2
 
@@ -789,7 +789,7 @@ Optei por tornar o prazo um atributo com valor padrão, em vez de criar uma hier
 
 #### Uso de IA
 
-Utilizei o Claude (Claude Code) para analisar o código do agregado e sugerir a violação de OCP, implementar a refatoração, escrever os novos testes e redigir um rascunho de `docs/solid.md` e desta subseção. Revisei o diff, rodei a suíte de testes antes de commitar e ajustei o texto, sendo responsável pelo resultado final.
+Utilizei o Claude para analisar o código do agregado, sugerir a violação de OCP, implementar a refatoração, escrever os novos testes e redigir um rascunho de `docs/solid.md` e desta subseção. Revisei o diff, rodei a suíte de testes antes de commitar e ajustei o texto, sendo responsável pelo resultado final.
 
 #### Integração na `main`
 
@@ -839,7 +839,7 @@ Mantive o `status` como texto na tabela `reservas` e fiz a `Reserva` encontrar o
 
 #### Uso de IA
 
-Utilizei o Claude (Claude Code) para escrever os testes e redigir os rascunhos de `docs/gof.md` (incluindo o diagrama Mermaid) e desta subseção. Revisei o código e os textos, rodei a suíte de testes antes de cada commit e sou responsável pelo resultado final.
+Utilizei o Claude para sugerir o padrão State, implementar as classes de estado e a delegação na `Reserva`, escrever os testes e redigir os rascunhos de `docs/gof.md` (incluindo o diagrama Mermaid) e desta subseção. Revisei o código e os textos, rodei a suíte de testes antes de cada commit e sou responsável pelo resultado final.
 
 #### Integração na `main`
 
@@ -862,9 +862,21 @@ docs(reservas): registra autorrelato da entrega final (commit que acompanha esta
 
 Acrescentei a subseção do checkpoint 1, a declaração de uso de IA da Fase 1, as referências de integração dos checkpoints 2 e 3 e esta subseção.
 
+17 - 11 - 2026
+Ajustes finais antes da entrega:
+
+- `8c08ce5` — docs(reservas): ajusta declaracoes de uso de IA e reflexao no DECISIONS. Corrigi as declarações de uso de IA dos checkpoints 2 e 3 para descrever com exatidão o que foi feito com o Claude e reescrevi trechos da reflexão.
+- `571092d` — test(reservas): verifica persistencia dos estados da Reserva no banco. Dois testes de integração mostram que uma reserva carregada do banco volta ao estado correto do padrão State e que as transições são gravadas na coluna `status`.
+- `5f412bb` — docs: remove titulos duplicados do gof.md, que tinham sobrado dos merges.
+- `f4be9e6` — docs: adiciona ADR sobre a estrutura do pacote por agregado (`docs/adr/0007-estrutura-por-agregado.md`), registrando por que o grupo repete as camadas do Apêndice B dentro de cada agregado.
+- `dc3405b` — docs: adiciona estrutura do repositorio e execucao dos testes ao README.
+
 #### Arquivos
 
 - `docs/adr/0005-persistencia-reserva-pela-fila-espera.md`
+- `docs/adr/0007-estrutura-por-agregado.md`
+- `docs/gof.md`
+- `src/biblioteca/reservas/tests/integration/test_reserva_repository.py`
 - `README.md`
 - `DECISIONS.md`
 
@@ -876,11 +888,13 @@ Optei por não apagar nem recriar as tags dos checkpoints 2 e 3. Qualquer commit
 
 #### Uso de IA
 
-Utilizei o Claude (Claude Code) para levantar no histórico os horários de merge de cada pull request, redigir a nota do grupo sobre as tags, montar a tabela do `README.md` e redigir os rascunhos desta subseção e do parágrafo de reflexão, que revisei e ajustei. Sou responsável pelo resultado final.
+Utilizei o Claude para levantar no histórico os horários de merge de cada pull request, redigir a nota do grupo sobre as tags, montar a tabela do `README.md` e redigir os rascunhos desta subseção e do parágrafo de reflexão, que revisei e ajustei. Sou responsável pelo resultado final.
+
+Nos ajustes finais de 17/11, também utilizei o Claude para escrever os dois testes de integração do padrão State, redigir o ADR 0007 e as seções novas do `README.md`, remover os títulos duplicados do `docs/gof.md` e corrigir as declarações de uso de IA dos checkpoints 2 e 3. Revisei as alterações e rodei a suíte de testes antes dos commits.
 
 #### Reflexão
 
-A Fase 2 mudou a forma como eu enxergo o código que eu mesmo escrevi. Na Fase 1, a `Reserva` parecia simples: três métodos curtos e um prazo fixo de 48 horas. Ao procurar uma violação de SOLID, percebi que esse número fixo impedia uma mudança de requisito bem plausível, como prazos diferentes por categoria de leitor, e que bastava transformá-lo em atributo para fechar a classe para modificação. No checkpoint 3, ao aplicar o padrão State, descobri um problema que eu nunca tinha notado: uma reserva expirada podia voltar a ficar disponível, e uma reserva disponível podia ter o prazo reiniciado. Os testes que escrevi para mostrar o problema falharam no código antigo, e isso me mostrou na prática que um padrão de projeto só vale a pena quando resolve um problema real do domínio. Também entendi melhor o papel dos testes como rede de segurança: as duas refatorações foram feitas sem alterar nenhum teste existente, e foi isso que me deu confiança de que o comportamento foi preservado. O que eu faria diferente é a organização do tempo. Atrasei o checkpoint 1 e concentrei commits perto dos prazos, o que prejudica a avaliação do processo. Também usaria a IA de forma mais transparente desde o início, declarando cada uso no momento em que acontece, e escreveria mais código por conta própria para fixar o conteúdo. Por fim, combinaria com o grupo, desde o começo, quem cria as tags e quando, para que elas sempre apontem para a `main` com o trabalho de todos.
+A Fase 2 mudou a forma como eu enxergo o código que eu mesmo escrevi. Na Fase 1, a `Reserva` parecia simples: três métodos curtos e um prazo fixo de 48 horas. Ao procurar uma violação de SOLID, percebi que esse número fixo impedia uma mudança de requisito bem plausível, como prazos diferentes por categoria de leitor, e que bastava transformá-lo em atributo para fechar a classe para modificação. No checkpoint 3, ao aplicar o padrão State, descobri um problema que eu nunca tinha notado: uma reserva expirada podia voltar a ficar disponível, e uma reserva disponível podia ter o prazo reiniciado. Os testes que escrevi para mostrar o problema falharam no código antigo, e isso me mostrou na prática que um padrão de projeto só vale a pena quando resolve um problema real do domínio. Também entendi melhor o papel dos testes como rede de segurança: as duas refatorações foram feitas sem alterar nenhum teste existente, e foi isso que me deu confiança de que o comportamento foi preservado. O que eu faria diferente é a organização do tempo. Atrasei o checkpoint 1 e concentrei commits perto dos prazos. Por fim, combinaria com o grupo, desde o começo, quem cria as tags e quando, para que elas sempre apontem para a `main` com o trabalho de todos.
 
 
 ## Ana Laura

@@ -141,8 +141,6 @@ classDiagram
 
 O padrão adiciona um módulo novo (`validators.py`), a classe `ValidadorCampoLivro`, as funções de montagem da cadeia e uma chamada recursiva entre os handlers. O custo compensa porque retira as validações repetidas de dentro de `services.py`, permite testar cada elo isoladamente sem banco de dados e facilita encadear novas validações no catálogo sem alterar o caso de uso.
 
-# Padrões GoF — Fase 2
-
 ## João Vicente Piller Menezes — Reserva
 
 ### Padrão e categoria
@@ -368,6 +366,13 @@ histórico permanece o padrão para não quebrar os testes e a API da Fase 1.
   - `test_reserva_disponivel_nao_reinicia_o_prazo_ao_ser_disponibilizada_de_novo`
   - `test_reserva_pendente_nao_pode_expirar`
   - `test_reserva_delega_o_comportamento_ao_estado_atual`
+- `src/biblioteca/reservas/tests/integration/test_reserva_repository.py`: testes do
+  padrão com o banco de dados.
+  - `test_reserva_carregada_do_banco_volta_ao_estado_correto`: uma reserva gravada como
+    `Disponivel` ou `Expirada` volta ao estado correspondente e continua recusando
+    transições inválidas depois de carregada pelo repositório.
+  - `test_transicao_de_estado_e_persistida_no_banco`: as transições feitas pelos
+    estados (Pendente → Disponível → Expirada) chegam à coluna `status` da tabela.
 
 Os quatro testes de `test_reserva.py` foram executados contra o código anterior ao
 padrão e **todos falharam**, o que confirma que os problemas descritos acima existiam.
@@ -375,7 +380,7 @@ Depois da aplicação do State, eles passam. Os testes que já existiam antes do
 (da fila, do serviço, de integração e e2e) continuaram passando sem alteração, o que
 mostra que o fluxo normal da fila de espera foi preservado.
 
-Execução local: `python -m pytest src/biblioteca/reservas -q` → `31 passed`.
+Execução local: `python -m pytest src/biblioteca/reservas -q` → `33 passed`.
 
 ### Custo da aplicação do padrão
 
@@ -417,8 +422,6 @@ classDiagram
     Leitor --> LeitorObserver : notifica
     LeitorObserver <|-- MockEmailObserver
 ```
-
-# Padrões GoF - Fase 2
 
 ## Ana Laura Neuhaus Vega — Multas
 
